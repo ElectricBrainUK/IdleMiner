@@ -1,5 +1,7 @@
 {
   "name": "IdleMiner",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "react"
 }
