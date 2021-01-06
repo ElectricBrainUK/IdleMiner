@@ -1,1 +1,0 @@
-\\192.168.1.100\WALLETS\ETHMINER\ethminer.exe -P stratum+tls://0x21313903459f75c08d3c99980f34fc41a7ef8564.%ComputerName%@eu1.ethermine.org:5555

@@ -41,7 +41,7 @@
       "icon": "appIcon.png"
     },
     "win": {
-      "target": "nsis",
+      "target": "portable",
       "icon": "appIcon.ico"
     }
   }
