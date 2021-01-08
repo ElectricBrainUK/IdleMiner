@@ -22,3 +22,7 @@
 .container a {
   text-decoration: none;
 }
+
+ion-card {
+  max-width: 35%;
+}

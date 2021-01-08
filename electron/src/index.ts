@@ -1,4 +1,4 @@
-import {app} from "electron";
+import {app, ipcRenderer} from "electron";
 import {createCapacitorElectronApp} from "@capacitor-community/electron";
 
 // The MainWindow object can be accessed via myCapacitorApp.getMainWindow()
@@ -16,6 +16,7 @@ app.on("window-all-closed", function () {
     // On OS X it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== "darwin") {
+        ipcRenderer.send("exit");
         app.quit();
     }
 });
@@ -27,3 +28,5 @@ app.on("activate", function () {
 });
 
 // Define any IPC or other custom functionality below here
+// @ts-ignore
+global.ipcRenderer = ipcRenderer;
