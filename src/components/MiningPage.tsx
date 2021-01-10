@@ -1,11 +1,13 @@
-import React, {ChangeEvent, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './MiningPage.css';
 import {Plugins} from '@capacitor/core';
 import {
     IonCard,
     IonCardContent,
     IonCardTitle,
-    IonCol, IonGrid, IonInput,
+    IonCol,
+    IonGrid,
+    IonInput,
     IonItem,
     IonLabel,
     IonRange,
@@ -32,13 +34,26 @@ let donation: number;
 
 let os: any;
 if (window && window.require) {
-    child = window.require('child_process').execFile;
+    child = window.require('child_process').spawn;
     electron = window.require('electron');
     os = window.require('os');
 }
 
 interface ContainerProps {
 }
+
+const appendToLog = (data: string) => {
+    data.toString().split("\n").forEach((line: any) => {
+        if (log.length > 1000) {
+            log.pop();
+        }
+        if (line !== "") {
+            log.push(line);
+        }
+    });
+
+    setLog(log);
+};
 
 const mine = () => {
     console.log("Starting mining");
@@ -48,20 +63,9 @@ const mine = () => {
 
     Storage.get({key: "dir"}).then(res => {
         if (res.value !== null) {
-            miningProgram = child(res.value, ["-P", "stratum+tls://" + address + "." + os.hostname + "@" + pool], (error: any, stdout: any, stderr: any) => {
-                if (error) {
-                    console.error(error);
-                }
-                if (stderr) {
-                    if (log.length > 1000) {
-                        log.pop();
-                    }
-                    log.push(stderr.toString());
-                    setLog(log);
-                    console.log(log[log.length - 1]);
-                }
-                console.log(stdout);
-            });
+            miningProgram = child(res.value, ["-P", "stratum+tls://" + address + "." + os.hostname + "@" + pool]);
+            miningProgram.stderr.on('data', appendToLog);
+            miningProgram.stdout.on('data', appendToLog);
         }
     });
 };
@@ -80,7 +84,7 @@ function checkAndRestartCrashes(split: string[]) {
     let currentTime = new Date();
     let lastMiningTime = new Date();
 
-    let timeSplit = split[1].split(':');
+    let timeSplit = split[2].split(':');
     lastMiningTime.setHours(Number(timeSplit[0]));
     lastMiningTime.setMinutes(Number(timeSplit[1]));
     lastMiningTime.setSeconds(Number(timeSplit[2]));
@@ -92,8 +96,7 @@ function checkAndRestartCrashes(split: string[]) {
 }
 
 const getMiningDetails = (split: string[], logLine: string, i: number) => {
-    console.log(split);
-    while (split[0] !== "m") {
+    while (split[1] !== "m") {
         i--;
         if (i < 0) {
             return;
@@ -102,7 +105,7 @@ const getMiningDetails = (split: string[], logLine: string, i: number) => {
         split = logLine.split(' ');
     }
 
-    setHashRate(split[5]);
+    setHashRate(split[6]);
 };
 
 const logInspector = () => {
@@ -126,6 +129,10 @@ const logInspector = () => {
     }
 
     if (!isMining) {
+        if (miningProgram) {
+            console.log("Stopping mining");
+            miningProgram.kill();
+        }
         return;
     }
 
@@ -163,6 +170,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
     setIsMining = setMining;
     setHashRate = setHashRateI;
     maxIdle = idleMins;
+    address = addressI;
+    pool = poolI;
 
     useEffect(() => {
         Storage.get({key: "dir"}).then(res => {
