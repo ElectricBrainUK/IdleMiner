@@ -191,7 +191,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [poolI, setPoolI] = useState("eu1.ethermine.org:5555");
     const [donateI, setDonateI] = useState(true);
     const [donationI, setDonationI] = useState(50);
-    const [donationMaximum, setDonationMaximum] = useState(1);
+    const [donationMaximum, setDonationMaximum] = useState(100);
 
     log = logs;
     setLog = setLogs;
