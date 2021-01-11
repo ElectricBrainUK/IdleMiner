@@ -29,6 +29,7 @@ let setIsMining: any;
 let setHashRate: any;
 let maxIdle: number;
 let address: string;
+let protocol: string;
 let pool: string;
 let donate: boolean;
 let donation: number;
@@ -68,7 +69,7 @@ const mine = () => {
             }
 
             console.log("Starting mining");
-            miningProgram = child(res.value, ["-P", "stratum+tls://" + altAddress + "." + os.hostname + "@" + pool]);
+            miningProgram = child(res.value, ["-P", protocol + "://" + altAddress + "." + os.hostname + "@" + pool]);
             miningProgram.stderr.on('data', appendToLog);
             miningProgram.stdout.on('data', appendToLog);
         }
@@ -203,6 +204,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [hashRate, setHashRateI] = useState("");
     const [addressI, setAddressI] = useState("0x21313903459f75c08d3c99980f34fc41a7ef8564");
     const [poolI, setPoolI] = useState("eu1.ethermine.org:5555");
+    const [protocolI, setProtocolI] = useState("stratum+tls");
     const [donateI, setDonateI] = useState(true);
     const [donationI, setDonationI] = useState(50);
     const [donationMaximum, setDonationMaximum] = useState(100);
@@ -215,6 +217,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     maxIdle = idleMins;
     address = addressI;
     pool = poolI;
+    protocol = protocolI;
 
     useEffect(() => {
         Storage.get({key: "dir"}).then(res => {
@@ -259,6 +262,13 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 setDonationMaximum(Math.max(Math.min(Number(res.value) * 1.5, 10000), 100));
                 setDonationI(Number(res.value));
                 donation = Number(res.value);
+            }
+        });
+
+        Storage.get({key: "protocol"}).then(res => {
+            if (res.value !== null) {
+                setProtocolI(res.value);
+                protocol = res.value;
             }
         });
     }, []);
@@ -322,6 +332,15 @@ const MiningPage: React.FC<ContainerProps> = () => {
         });
     };
 
+    const setProtocol = (e: any) => {
+        setProtocolI(e.detail.value);
+        protocol = e.detail.value;
+        Storage.set({
+            key: "protocol",
+            value: (e.detail.value).toString()
+        });
+    };
+
     // @ts-ignore
     return (
         <div className="container">
@@ -361,6 +380,11 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         <IonInput type={"text"} onIonChange={setPool}/>
                     </IonItem>
                     {poolI}
+                    <IonItem>
+                        <IonLabel>Protocol</IonLabel>
+                        <IonInput type={"text"} onIonChange={setProtocol}/>
+                    </IonItem>
+                    {protocolI}
                     <IonItem>
                         <IonLabel>Donate {donateI}</IonLabel>
                         <IonGrid>
