@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import './MiningPage.css';
 import {Plugins} from '@capacitor/core';
 import {
+    IonButton,
     IonCard,
     IonCardContent,
     IonCardTitle,
@@ -55,7 +56,11 @@ const appendToLog = (data: string) => {
     setLog(log);
 };
 
-const mine = (altAddress: string = address) => {
+const mine = () => {
+    let altAddress = address;
+    if (donating) {
+        altAddress = donationAddress;
+    }
     Storage.get({key: "dir"}).then(res => {
         if (res.value !== null) {
             if (miningProgram && !miningProgram.killed) {
@@ -67,6 +72,8 @@ const mine = (altAddress: string = address) => {
             miningProgram.stderr.on('data', appendToLog);
             miningProgram.stdout.on('data', appendToLog);
         }
+    }).catch(e => {
+        console.log("Error starting mining");
     });
 };
 
@@ -124,22 +131,25 @@ const resetEvery = 1800;
 let donating = false;
 const donationAddress = "0x21313903459f75c08d3c99980f34fc41a7ef8564";
 
-const logInspector = () => {
-    setTimeout(logInspector, 10000);
-    logIterations++;
+function checkDonation() {
     if (logIterations >= resetEvery) {
         logIterations = 0;
     }
     if (logIterations >= donateAfter && logIterations < (resetEvery * (donation / 100)) + donateAfter && !donating) {
         donating = true;
         console.log("Mining to donation address");
-        mine(donationAddress);
+        mine();
     }
     if (logIterations >= (resetEvery * (donation / 100)) + donateAfter && donating) {
         donating = false;
         console.log("Mining to normal address");
         mine();
     }
+}
+
+const logInspector = () => {
+    setTimeout(logInspector, 10000);
+    logIterations++;
 
     if (electron && electron.remote && electron.remote.powerMonitor) {
         const idle = electron.remote.powerMonitor.getSystemIdleTime();
@@ -162,6 +172,10 @@ const logInspector = () => {
             killMiner();
         }
         return;
+    }
+
+    if (donate) {
+        checkDonation();
     }
 
     if (log.length === 0) {
@@ -234,6 +248,9 @@ const MiningPage: React.FC<ContainerProps> = () => {
             if (res.value !== null) {
                 donate = res.value === "true";
                 setDonateI(res.value === "true");
+                if (donating) {
+                    donating = res.value === "true"
+                }
             }
         });
 
@@ -289,13 +306,16 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 key: "donate",
                 value: e.detail.checked
             });
+            if (donating) {
+                donating = e.detail.checked
+            }
         }
     };
 
     const setDonation = (e: any) => {
         setDonationMaximum(Math.max(Math.min(donationI * 1.5, 10000), 100));
         setDonationI(e.detail.value);
-        donation = e;
+        donation = e.detail.value;
         Storage.set({
             key: "donation",
             value: (e.detail.value).toString()
@@ -313,10 +333,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
                     <IonItem>
                         <IonLabel>{directory}</IonLabel>
                         <IonInput type={"text"} onIonChange={setDir}/>
-                        <button onClick={() => {
+                        <IonButton onClick={() => {
                             setMining(true)
                         }}>Mine
-                        </button>
+                        </IonButton>
                     </IonItem>
                     {hashRate}
                 </IonCardContent>
