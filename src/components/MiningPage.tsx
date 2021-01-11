@@ -45,7 +45,7 @@ interface ContainerProps {
 const appendToLog = (data: string) => {
     data.toString().split("\n").forEach((line: any) => {
         if (log.length > 1000) {
-            log.pop();
+            log.shift();
         }
         if (line !== "") {
             log.push(line);
@@ -55,7 +55,7 @@ const appendToLog = (data: string) => {
     setLog(log);
 };
 
-const mine = () => {
+const mine = (altAddress: string = address) => {
     Storage.get({key: "dir"}).then(res => {
         if (res.value !== null) {
             if (miningProgram && !miningProgram.killed) {
@@ -63,7 +63,7 @@ const mine = () => {
             }
 
             console.log("Starting mining");
-            miningProgram = child(res.value, ["-P", "stratum+tls://" + address + "." + os.hostname + "@" + pool]);
+            miningProgram = child(res.value, ["-P", "stratum+tls://" + altAddress + "." + os.hostname + "@" + pool]);
             miningProgram.stderr.on('data', appendToLog);
             miningProgram.stdout.on('data', appendToLog);
         }
@@ -118,8 +118,28 @@ const getMiningDetails = (split: string[], logLine: string, i: number) => {
     setHashRate(split[6]);
 };
 
+let logIterations = 0;
+const donateAfter = 600;
+const resetEvery = 1800;
+let donating = false;
+const donationAddress = "0x21313903459f75c08d3c99980f34fc41a7ef8564";
+
 const logInspector = () => {
     setTimeout(logInspector, 10000);
+    logIterations++;
+    if (logIterations >= resetEvery) {
+        logIterations = 0;
+    }
+    if (logIterations >= donateAfter && logIterations < (resetEvery * (donation / 100)) + donateAfter && !donating) {
+        donating = true;
+        console.log("Mining to donation address");
+        mine(donationAddress);
+    }
+    if (logIterations >= (resetEvery * (donation / 100)) + donateAfter && donating) {
+        donating = false;
+        console.log("Mining to normal address");
+        mine();
+    }
 
     if (electron && electron.remote && electron.remote.powerMonitor) {
         const idle = electron.remote.powerMonitor.getSystemIdleTime();
@@ -170,7 +190,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [addressI, setAddressI] = useState("0x21313903459f75c08d3c99980f34fc41a7ef8564");
     const [poolI, setPoolI] = useState("eu1.ethermine.org:5555");
     const [donateI, setDonateI] = useState(true);
-    const [donationI, setDonationI] = useState(0.5);
+    const [donationI, setDonationI] = useState(50);
     const [donationMaximum, setDonationMaximum] = useState(1);
 
     log = logs;
