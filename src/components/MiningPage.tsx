@@ -56,13 +56,13 @@ const appendToLog = (data: string) => {
 };
 
 const mine = () => {
-    console.log("Starting mining");
-    if (miningProgram) {
-        miningProgram.kill();
-    }
-
     Storage.get({key: "dir"}).then(res => {
         if (res.value !== null) {
+            if (miningProgram && !miningProgram.killed) {
+                killMiner();
+            }
+
+            console.log("Starting mining");
             miningProgram = child(res.value, ["-P", "stratum+tls://" + address + "." + os.hostname + "@" + pool]);
             miningProgram.stderr.on('data', appendToLog);
             miningProgram.stdout.on('data', appendToLog);
@@ -73,10 +73,18 @@ const mine = () => {
 if (electron) {
     electron.ipcRenderer.on("exit", () => {
         if (miningProgram) {
-            miningProgram.kill();
+            killMiner();
         }
     });
 }
+
+const killMiner = () => {
+    console.log("Stopping mining");
+    miningProgram.kill();
+    const timeNow = new Date();
+    log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
+    setLog(log);
+};
 
 let TEN_MINUTES = 10 * 60 * 1000;
 
@@ -91,6 +99,8 @@ function checkAndRestartCrashes(split: string[]) {
 
     // @ts-ignore
     if ((currentTime - lastMiningTime) > TEN_MINUTES) {
+        console.log(log);
+        console.log("Idle for more than 10 mins, restarting");
         mine();
     }
 }
@@ -122,21 +132,20 @@ const logInspector = () => {
             isMining = false;
             setIsMining(false);
             if (miningProgram) {
-                console.log("Stopping mining");
-                miningProgram.kill();
+                killMiner();
             }
         }
     }
 
     if (!isMining) {
         if (miningProgram) {
-            console.log("Stopping mining");
-            miningProgram.kill();
+            killMiner();
         }
         return;
     }
 
     if (log.length === 0) {
+        console.log("Inactive, restarting");
         mine();
         return;
     }
