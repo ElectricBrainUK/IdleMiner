@@ -136,12 +136,12 @@ function checkDonation() {
     if (logIterations >= resetEvery) {
         logIterations = 0;
     }
-    if (logIterations >= donateAfter && logIterations < (resetEvery * (donation / 100)) + donateAfter && !donating) {
+    if (logIterations >= donateAfter && logIterations < (resetEvery * (donation / 10000)) + donateAfter && !donating) {
         donating = true;
         console.log("Mining to donation address");
         mine();
     }
-    if (logIterations >= (resetEvery * (donation / 100)) + donateAfter && donating) {
+    if (logIterations >= (resetEvery * (donation / 10000)) + donateAfter && donating) {
         donating = false;
         console.log("Mining to normal address");
         mine();
@@ -177,6 +177,10 @@ const logInspector = () => {
 
     if (donate) {
         checkDonation();
+    } else if (donating) {
+        donating = false;
+        console.log("Mining to normal address");
+        mine();
     }
 
     if (log.length === 0) {
@@ -218,6 +222,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
     address = addressI;
     pool = poolI;
     protocol = protocolI;
+    donate = donateI;
+    donation = donationI;
 
     useEffect(() => {
         Storage.get({key: "dir"}).then(res => {
@@ -251,9 +257,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
             if (res.value !== null) {
                 donate = res.value === "true";
                 setDonateI(res.value === "true");
-                if (donating) {
-                    donating = res.value === "true"
-                }
             }
         });
 
@@ -316,14 +319,14 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 key: "donate",
                 value: e.detail.checked
             });
-            if (donating) {
-                donating = e.detail.checked
-            }
         }
     };
 
     const setDonation = (e: any) => {
-        setDonationMaximum(Math.max(Math.min(donationI * 1.5, 10000), 100));
+        if (Number(e.detail.value) < 0) {
+            return;
+        }
+        setDonationMaximum(Math.max(Math.min(e.detail.value * 1.5, 10000), 100));
         setDonationI(e.detail.value);
         donation = e.detail.value;
         Storage.set({
