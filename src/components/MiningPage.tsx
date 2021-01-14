@@ -32,7 +32,7 @@ let address: string;
 let protocol: string;
 let pool: string;
 let donate: boolean;
-let donation: number;
+let donation: any;
 
 let os: any;
 if (window && window.require) {
@@ -57,11 +57,7 @@ const appendToLog = (data: string) => {
     setLog(log);
 };
 
-const mine = () => {
-    let altAddress = address;
-    if (donating) {
-        altAddress = donationAddress;
-    }
+const mine = (altAddress = address) => {
     Storage.get({key: "dir"}).then(res => {
         if (res.value !== null) {
             if (miningProgram && !miningProgram.killed) {
@@ -130,22 +126,31 @@ let logIterations = 0;
 const donateAfter = 600;
 const resetEvery = 1800;
 let donating = false;
-const donationAddress = "0x21313903459f75c08d3c99980f34fc41a7ef8564";
+let donationAddress: any = {
+    default: "0x21313903459f75c08d3c99980f34fc41a7ef8564"
+};
 
 function checkDonation() {
     if (logIterations >= resetEvery) {
         logIterations = 0;
     }
-    if (logIterations >= donateAfter && logIterations < (resetEvery * (donation / 10000)) + donateAfter && !donating) {
-        donating = true;
-        console.log("Mining to donation address");
-        mine();
+    if (logIterations >= donateAfter && !donating) {
+        let runningTotal = 0;
+        for (let i = 0; i < Object.keys(donation).length; i++) {
+            let key = Object.keys(donation)[i];
+            if (logIterations < (resetEvery * (donation[key] / 10000)) + donateAfter + runningTotal) {
+                donating = true;
+                console.log("Mining to donation address " + key);
+                mine(donationAddress[key]);
+                return;
+            }
+            runningTotal += resetEvery * (donation[key] / 10000);
+        }
     }
-    if (logIterations >= (resetEvery * (donation / 10000)) + donateAfter && donating) {
-        donating = false;
-        console.log("Mining to normal address");
-        mine();
-    }
+
+    donating = false;
+    console.log("Mining to normal address");
+    mine();
 }
 
 const logInspector = () => {
@@ -210,8 +215,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [poolI, setPoolI] = useState("eu1.ethermine.org:5555");
     const [protocolI, setProtocolI] = useState("stratum+tls");
     const [donateI, setDonateI] = useState(true);
-    const [donationI, setDonationI] = useState(50);
-    const [donationMaximum, setDonationMaximum] = useState(100);
+    const [donationI, setDonationI] = useState({default: 50});
+    const [donationMaximum, setDonationMaximum] = useState({default: 100});
+    const [newDonationName, setNewDonationName] = useState("");
+    const [newDonationAddress, setNewDonationAddress] = useState("");
 
     log = logs;
     setLog = setLogs;
@@ -262,9 +269,17 @@ const MiningPage: React.FC<ContainerProps> = () => {
 
         Storage.get({key: "donation"}).then(res => {
             if (res.value !== null) {
-                setDonationMaximum(Math.max(Math.min(Number(res.value) * 1.5, 10000), 100));
-                setDonationI(Number(res.value));
-                donation = Number(res.value);
+                let donations = JSON.parse(res.value);
+                if (!donations.default) {
+                    return;
+                }
+                let donationsClone = Object.assign({}, donations);
+                Object.keys(donationsClone).forEach(key => {
+                    donationsClone[key] = Math.max(Math.min(donationsClone[key] * 1.5, 10000), 100);
+                });
+                setDonationMaximum(donationsClone);
+                setDonationI(donations);
+                donation = donations;
             }
         });
 
@@ -272,6 +287,12 @@ const MiningPage: React.FC<ContainerProps> = () => {
             if (res.value !== null) {
                 setProtocolI(res.value);
                 protocol = res.value;
+            }
+        });
+
+        Storage.get({key: "addresses"}).then(res => {
+            if (res.value !== null) {
+                donationAddress = JSON.parse(res.value);
             }
         });
     }, []);
@@ -322,16 +343,22 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     };
 
-    const setDonation = (e: any) => {
+    const setDonation = (e: any, key: string) => {
         if (Number(e.detail.value) < 0) {
             return;
         }
-        setDonationMaximum(Math.max(Math.min(e.detail.value * 1.5, 10000), 100));
-        setDonationI(e.detail.value);
-        donation = e.detail.value;
+
+        let clone: any = Object.assign({}, donationMaximum);
+        clone[key] = Math.max(Math.min(e.detail.value * 1.5, 10000), 100);
+        setDonationMaximum(clone);
+
+        let donationClone: any = Object.assign({}, donationI);
+        donationClone[key] = Number(e.detail.value);
+        setDonationI(donationClone);
+        donation = donationClone;
         Storage.set({
             key: "donation",
-            value: (e.detail.value).toString()
+            value: JSON.stringify(donationClone)
         });
     };
 
@@ -343,6 +370,107 @@ const MiningPage: React.FC<ContainerProps> = () => {
             value: (e.detail.value).toString()
         });
     };
+
+    const addDonationAddress = (name: string, address: string) => {
+        donationAddress[name] = address;
+        setDonation({detail: {value: 50}}, name);
+        Storage.set({
+            key: "addresses",
+            value: JSON.stringify(donationAddress)
+        });
+    };
+
+    const removeDonationAddress = (name: string) => {
+        delete donationAddress[name];
+        let clone: any = Object.assign({}, donationI);
+        delete clone[name];
+        setDonationI(clone);
+        Storage.set({
+            key: "donation",
+            value: JSON.stringify(clone)
+        });
+        Storage.set({
+            key: "addresses",
+            value: JSON.stringify(donationAddress)
+        });
+    };
+
+    let donations: any = [];
+    Object.keys(donationI).forEach((key: string) => {
+        // @ts-ignore
+        let donationMaximumElement = donationMaximum[key];
+        // @ts-ignore
+        let donationIElement = donationI[key];
+        donations.push(<IonCol key={key}>
+            <IonRow>
+                <IonRange min={0} max={Number(donationMaximumElement.toFixed(2))}
+                          value={donationIElement} color="secondary"
+                          onIonChange={(e: any) => {
+                              if (e.detail.value !== Number(donationIElement)) {
+                                  setDonation(e, key);
+                              }
+                          }}>
+                    <IonLabel slot="start">0</IonLabel>
+                    <IonLabel
+                        slot="end">{(donationMaximumElement / 100).toFixed(2)}</IonLabel>
+                </IonRange>
+            </IonRow>
+            <IonRow>
+                <IonInput type={"text"} value={donationIElement / 100}
+                          onIonChange={(e: any) => {
+                              if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement / 100) {
+                                  e.detail.value *= 100;
+                                  setDonation(e, key);
+                              }
+                          }}/>
+            </IonRow>
+            <IonRow>
+                <IonItem>
+                    <IonLabel>{key}</IonLabel>
+                    <br/>
+                    {donationAddress[key]}
+                </IonItem>
+            </IonRow>
+            {
+                key !== "default" ?
+                    <IonRow>
+                        <IonButton onClick={() => {
+                            removeDonationAddress(key)
+                        }}>Remove</IonButton>
+                    </IonRow>
+                    :
+                    <></>
+            }
+        </IonCol>);
+    });
+
+    donations.push(
+        <IonCol key={"newDonation"}>
+            <IonRow>
+                New Donation
+            </IonRow>
+            <IonRow>
+                <IonItem>
+                    <IonLabel>Name</IonLabel>
+                    <IonInput type={"text"} onIonChange={(e: any) => {
+                        setNewDonationName(e.detail.value);
+                    }}/>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Address</IonLabel>
+                    <IonInput type={"text"} onIonChange={(e: any) => {
+                        setNewDonationAddress(e.detail.value);
+                    }}/>
+                </IonItem>
+                <IonButton onClick={() => {
+                    if (newDonationAddress !== "" && newDonationName !== "" && newDonationAddress.substring(0, 2) === "0x" && newDonationAddress.length === donationAddress.default.length) {
+                        addDonationAddress(newDonationName, newDonationAddress);
+                    } else {
+                        alert("Invalid Address");
+                    }
+                }}>Add</IonButton>
+            </IonRow>
+        </IonCol>);
 
     // @ts-ignore
     return (
@@ -399,31 +527,9 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                     <IonRow>
                                         {
                                             donateI ?
-                                                <IonCol>
-                                                    <IonRow>
-                                                        <IonRange min={0} max={Number(donationMaximum.toFixed(2))}
-                                                                  value={donationI} color="secondary"
-                                                                  onIonChange={(e: any) => {
-                                                                      if (e.detail.value !== Number(donationI)) {
-                                                                          setDonation(e)
-                                                                      }
-                                                                  }}>
-                                                            <IonLabel slot="start">0</IonLabel>
-                                                            <IonLabel
-                                                                slot="end">{(donationMaximum / 100).toFixed(2)}</IonLabel>
-                                                        </IonRange>
-                                                    </IonRow>
-                                                    <IonRow>
-                                                        <IonInput type={"text"} value={donationI / 100}
-                                                                  onIonChange={(e: any) => {
-                                                                      if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationI / 100) {
-                                                                          e.detail.value *= 100;
-                                                                          setDonation(e);
-                                                                      }
-                                                                  }}/>
-                                                    </IonRow>
-                                                </IonCol>
-                                                : <></>
+                                                donations
+                                                :
+                                                <></>
                                         }
                                     </IonRow>
                                 </IonCol>
