@@ -167,10 +167,6 @@ if (electron) {
             killMiner();
         }
         if (mqttClient) {
-            mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-                hashRate: 0,
-                isMining: false
-            }));
             mqttClient.end();
         }
     });
@@ -182,6 +178,13 @@ const killMiner = () => {
     const timeNow = new Date();
     log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
     setLog(log);
+
+    if (mqttClient && mqttClient.connected) {
+        mqttClient.publish("idleminer/" + hostName, JSON.stringify({
+            hashRate: 0,
+            isMining: false
+        }));
+    }
 };
 
 let TEN_MINUTES = 10 * 60 * 1000;
