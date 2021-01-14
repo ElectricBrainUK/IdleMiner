@@ -36,7 +36,7 @@ let donate: boolean;
 let donation: any;
 let baseTopic: string;
 let miningDisabled: boolean;
-let otherHosts: any;
+let otherHosts: any = {};
 let setOthers: any;
 let hostName = "";
 
@@ -71,7 +71,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         mqttClient = mqttModule.connect(protocol + broker, options);
 
         mqttClient.on('connect', () => {
-            mqttClient.subscribe('idleminer', (err: any) => {
+            mqttClient.subscribe('idleminer/#', (err: any) => {
                 if (!err) {
                     mqttClient.publish(baseTopic + "/switch/" + hostName + "/config", JSON.stringify({
                         "payload_on": true,
@@ -100,8 +100,8 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         });
 
         mqttClient.on("message", (topic: string, message: any) => {
-            let topicParts = topic.split('/')[0];
-            if (topicParts[0] === "idleminer" && topicParts[1] !== hostName) {
+            let topicParts = topic.split('/');
+            if (topicParts[0] === "idleminer" && topicParts[1] !== hostName && topicParts.length === 2) {
                 otherHosts[topicParts[1]] = JSON.parse(message.toString());
                 setOthers(otherHosts);
             }
@@ -110,8 +110,6 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
                 if (message.toString() === "True" || message.toString() === "true") {
                     console.log("Starting mining manually");
                     miningDisabled = false;
-                    setIsMining(true);
-                    isMining = true;
                 } else {
                     console.log("Stopping mining manually");
                     miningDisabled = true;
@@ -181,7 +179,7 @@ const killMiner = () => {
 
     if (mqttClient && mqttClient.connected) {
         mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-            hashRate: 0,
+            hashRate: "0",
             isMining: false
         }));
     }
@@ -765,7 +763,9 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 Is Mining: {mqttOtherHost.isMining}
                 Hash Rate: {mqttOtherHost.hashRate}
                 <IonToggle checked={mqttOtherHost.isMining}
-                           onIonChange={(e) => mqttClient.publish("idleminer/" + hostName + "/mine", e.detail.checked)}/>
+                           onIonChange={(e) => {
+                               mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked))
+                           }}/>
             </IonItem>
         )
     });
@@ -784,7 +784,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         <IonLabel>{directory}</IonLabel>
                         <IonInput type={"text"} onIonChange={setDir}/>
                         <IonButton onClick={() => {
-                            setMining(true)
+                            miningDisabled = false;
+                            setMining(true);
                         }}>Mine
                         </IonButton>
                     </IonItem>
