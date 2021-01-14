@@ -6,11 +6,11 @@ import {
     IonCard,
     IonCardContent,
     IonCardTitle,
-    IonCol,
+    IonCol, IonContent,
     IonGrid,
     IonInput,
     IonItem,
-    IonLabel,
+    IonLabel, IonList,
     IonRange,
     IonRow,
     IonToggle
@@ -27,19 +27,106 @@ let setLog: any;
 let isMining = false;
 let setIsMining: any;
 let setHashRate: any;
+let hashRate: string;
 let maxIdle: number;
 let address: string;
 let protocol: string;
 let pool: string;
 let donate: boolean;
 let donation: any;
+let baseTopic: string;
+let miningDisabled: boolean;
+let otherHosts: any;
+let setOthers: any;
+let hostName = "";
 
 let os: any;
+let mqttModule: any;
 if (window && window.require) {
     child = window.require('child_process').spawn;
     electron = window.require('electron');
     os = window.require('os');
+    mqttModule = window.require('mqtt');
+    let string = "" + os.hostname;
+    hostName = string.split('.')[0];
 }
+
+let mqttClient: any;
+
+const connectToMqtt = (protocol: string, broker: string, username: string, password: string, port: string, selfSigned: boolean) => {
+    const options: any = {
+        username: username,
+        password: password,
+        port: port,
+        host: broker,
+        rejectUnauthorized: !selfSigned
+    };
+
+
+    if (!mqttModule) {
+        return;
+    }
+
+    try {
+        mqttClient = mqttModule.connect(protocol + broker, options);
+
+        mqttClient.on('connect', () => {
+            mqttClient.subscribe('idleminer', (err: any) => {
+                if (!err) {
+                    mqttClient.publish(baseTopic + "/switch/" + hostName + "/config", JSON.stringify({
+                        "payload_on": true,
+                        "payload_off": false,
+                        "json_attributes_topic": "idleminer/" + hostName,
+                        "value_template": "{{ value_json.isMining }}",
+                        "state_topic": "idleminer/" + hostName,
+                        "name": hostName,
+                        "unique_id": hostName,
+                        "device": {
+                            "name": hostName,
+                            "identifiers": [hostName],
+                            "manufacturer": "Electric Brain",
+                            "model": "Miner"
+                        },
+                        "command_topic": "idleminer/" + hostName + "/mine"
+                    }));
+                    mqttClient.publish("idleminer/" + hostName, JSON.stringify({
+                        hashRate,
+                        isMining
+                    }));
+
+                    mqttClient.subscribe("idleminer/" + hostName + "/mine");
+                }
+            });
+        });
+
+        mqttClient.on("message", (topic: string, message: any) => {
+            let topicParts = topic.split('/')[0];
+            if (topicParts[0] === "idleminer" && topicParts[1] !== hostName) {
+                otherHosts[topicParts[1]] = JSON.parse(message.toString());
+                setOthers(otherHosts);
+            }
+
+            if (topic === "idleminer/" + hostName + "/mine") {
+                if (message.toString() === "True" || message.toString() === "true") {
+                    console.log("Starting mining manually");
+                    miningDisabled = false;
+                    setIsMining(true);
+                    isMining = true;
+                } else {
+                    console.log("Stopping mining manually");
+                    miningDisabled = true;
+                    setIsMining(false);
+                    isMining = false;
+                    if (miningProgram) {
+                        killMiner();
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        alert("Faled to connect to mqtt broker: " + e.message);
+    }
+};
 
 interface ContainerProps {
 }
@@ -65,7 +152,7 @@ const mine = (altAddress = address) => {
             }
 
             console.log("Starting mining");
-            miningProgram = child(res.value, ["-P", protocol + "://" + altAddress + "." + os.hostname + "@" + pool]);
+            miningProgram = child(res.value, ["-P", protocol + "://" + altAddress + "." + hostName + "@" + pool]);
             miningProgram.stderr.on('data', appendToLog);
             miningProgram.stdout.on('data', appendToLog);
         }
@@ -78,6 +165,13 @@ if (electron) {
     electron.ipcRenderer.on("exit", () => {
         if (miningProgram) {
             killMiner();
+        }
+        if (mqttClient) {
+            mqttClient.publish("idleminer/" + hostName, JSON.stringify({
+                hashRate: 0,
+                isMining: false
+            }));
+            mqttClient.end();
         }
     });
 }
@@ -120,6 +214,7 @@ const getMiningDetails = (split: string[], logLine: string, i: number) => {
     }
 
     setHashRate(split[6]);
+    hashRate = split[6];
 };
 
 let logIterations = 0;
@@ -134,8 +229,8 @@ function checkDonation() {
     if (logIterations >= resetEvery) {
         logIterations = 0;
     }
+    let runningTotal = 0;
     if (logIterations >= donateAfter && !donating) {
-        let runningTotal = 0;
         for (let i = 0; i < Object.keys(donation).length; i++) {
             let key = Object.keys(donation)[i];
             if (logIterations < (resetEvery * (donation[key] / 10000)) + donateAfter + runningTotal) {
@@ -148,13 +243,19 @@ function checkDonation() {
         }
     }
 
-    donating = false;
-    console.log("Mining to normal address");
-    mine();
+    if (donating) {
+        donating = false;
+        console.log("Mining to normal address");
+        mine();
+    }
 }
 
 const logInspector = () => {
     setTimeout(logInspector, 10000);
+    if (miningDisabled) {
+        return;
+    }
+
     logIterations++;
 
     if (electron && electron.remote && electron.remote.powerMonitor) {
@@ -194,6 +295,13 @@ const logInspector = () => {
         return;
     }
 
+    if (mqttClient && mqttClient.connected) {
+        mqttClient.publish("idleminer/" + hostName, JSON.stringify({
+            hashRate,
+            isMining
+        }));
+    }
+
     let i = log.length - 1;
     let logLine = log[i];
     let split = logLine.split(' ');
@@ -219,6 +327,15 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [donationMaximum, setDonationMaximum] = useState({default: 100});
     const [newDonationName, setNewDonationName] = useState("");
     const [newDonationAddress, setNewDonationAddress] = useState("");
+    const [mqtt, setMQTTi] = useState(false);
+    const [mqttProtocol, setMQTTProtocoli] = useState("");
+    const [mqttBroker, setMQTTBrokeri] = useState("");
+    const [mqttUsername, setMQTTUsernamei] = useState("");
+    const [mqttPassword, setMQTTPasswordi] = useState("");
+    const [mqttPort, setMQTTPorti] = useState("");
+    const [mqttSelfSigned, setMQTTSelfSignedi] = useState(false);
+    const [mqttBaseTopic, setMQTTBaseTopici] = useState("");
+    const [mqttOtherHosts, setOtherHosts] = useState({});
 
     log = logs;
     setLog = setLogs;
@@ -231,6 +348,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
     protocol = protocolI;
     donate = donateI;
     donation = donationI;
+    baseTopic = mqttBaseTopic;
+    setOthers = setOtherHosts;
 
     useEffect(() => {
         Storage.get({key: "dir"}).then(res => {
@@ -293,6 +412,79 @@ const MiningPage: React.FC<ContainerProps> = () => {
         Storage.get({key: "addresses"}).then(res => {
             if (res.value !== null) {
                 donationAddress = JSON.parse(res.value);
+            }
+        });
+
+        let mqttDetails = [];
+        let mqttCheck = false;
+        let values: any = {};
+        mqttDetails.push(Storage.get({key: "mqtt"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                mqttCheck = value;
+                setMQTTi(value);
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttBroker"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTBrokeri(value);
+                values.broker = value;
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttUsername"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTUsernamei(value);
+                values.userName = value;
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttPassword"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTPasswordi(value);
+                values.password = value;
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttPort"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTPorti(value);
+                values.port = value;
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttSelfSigned"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTSelfSignedi(value);
+                values.selfSigned = value;
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttProtocol"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTProtocoli(value);
+                values.protocol = value;
+            }
+        }));
+
+        mqttDetails.push(Storage.get({key: "mqttBaseTopic"}).then(res => {
+            if (res.value !== null) {
+                let value = JSON.parse(res.value);
+                setMQTTBaseTopici(value);
+                baseTopic = value;
+            }
+        }));
+
+        Promise.all(mqttDetails).then(() => {
+            if (mqttCheck) {
+                connectToMqtt(values.protocol, values.broker, values.userName, values.password, values.port, values.selfSigned);
             }
         });
     }, []);
@@ -395,6 +587,93 @@ const MiningPage: React.FC<ContainerProps> = () => {
         });
     };
 
+    const setMQTT = (e: any) => {
+        if (e.detail) {
+            setMQTTi(e.detail.checked);
+            Storage.set({
+                key: "mqtt",
+                value: JSON.stringify(e.detail.checked)
+            });
+        }
+    };
+
+    const setMQTTUsername = (e: any) => {
+        if (e.detail) {
+            setMQTTUsernamei(e.detail.value);
+            Storage.set({
+                key: "mqttUsername",
+                value: JSON.stringify(e.detail.value)
+            });
+            connectToMqtt(mqttProtocol, mqttBroker, e.detail.value, mqttPassword, mqttPort, mqttSelfSigned);
+        }
+    };
+
+    const setMQTTPassword = (e: any) => {
+        if (e.detail) {
+            setMQTTPasswordi(e.detail.value);
+            Storage.set({
+                key: "mqttPassword",
+                value: JSON.stringify(e.detail.value)
+            });
+            connectToMqtt(mqttProtocol, mqttBroker, mqttUsername, e.detail.value, mqttPort, mqttSelfSigned);
+        }
+    };
+
+    const setMQTTPort = (e: any) => {
+        if (e.detail) {
+            setMQTTPorti(e.detail.value);
+            Storage.set({
+                key: "mqttPort",
+                value: JSON.stringify(e.detail.value)
+            });
+            connectToMqtt(mqttProtocol, mqttBroker, mqttUsername, mqttPassword, e.detail.value, mqttSelfSigned);
+        }
+    };
+
+    const setMQTTSelfSigned = (e: any) => {
+        if (e.detail) {
+            setMQTTSelfSignedi(e.detail.checked);
+            Storage.set({
+                key: "mqttSelfSigned",
+                value: JSON.stringify(e.detail.checked)
+            });
+            connectToMqtt(mqttProtocol, mqttBroker, mqttUsername, mqttPassword, mqttPort, e.detail.checked);
+        }
+    };
+
+    const setMQTTBroker = (e: any) => {
+        if (e.detail) {
+            setMQTTBrokeri(e.detail.value);
+            Storage.set({
+                key: "mqttBroker",
+                value: JSON.stringify(e.detail.value)
+            });
+            connectToMqtt(mqttProtocol, e.detail.value, mqttUsername, mqttPassword, mqttPort, mqttSelfSigned);
+        }
+    };
+
+    const setMQTTProtocol = (e: any) => {
+        if (e.detail) {
+            setMQTTProtocoli(e.detail.value);
+            Storage.set({
+                key: "mqttProtocol",
+                value: JSON.stringify(e.detail.value)
+            });
+            connectToMqtt(e.detail.value, mqttBroker, mqttUsername, mqttPassword, mqttPort, mqttSelfSigned);
+        }
+    };
+
+    const setMQTTBaseTopic = (e: any) => {
+        if (e.detail) {
+            baseTopic = e.detail.value;
+            setMQTTBaseTopici(e.detail.value);
+            Storage.set({
+                key: "mqttBaseTopic",
+                value: JSON.stringify(e.detail.value)
+            });
+        }
+    };
+
     let donations: any = [];
     Object.keys(donationI).forEach((key: string) => {
         // @ts-ignore
@@ -472,9 +751,27 @@ const MiningPage: React.FC<ContainerProps> = () => {
             </IonRow>
         </IonCol>);
 
+    let others: any = [];
+
+    Object.keys(mqttOtherHosts).forEach(hostName => {
+        // @ts-ignore
+        let mqttOtherHost = mqttOtherHosts[hostName];
+        others.push(
+            <IonItem>
+                <IonLabel>{hostName}</IonLabel>
+                Is Mining: {mqttOtherHost.isMining}
+                Hash Rate: {mqttOtherHost.hashRate}
+                <IonToggle checked={mqttOtherHost.isMining}
+                           onIonChange={(e) => mqttClient.publish("idleminer/" + hostName + "/mine", e.detail.checked)}/>
+            </IonItem>
+        )
+    });
     // @ts-ignore
     return (
-        <div className="container">
+        <IonContent className="scroll-content container">
+            <br/>
+            <br/>
+            <br/>
             <IonCard>
                 <IonCardTitle>
                     Mining Software Path
@@ -538,7 +835,66 @@ const MiningPage: React.FC<ContainerProps> = () => {
                     </IonItem>
                 </IonCardContent>
             </IonCard>
-        </div>
+            <IonCard>
+                <IonCardTitle>
+                    MQTT
+                </IonCardTitle>
+                <IonCardContent>
+                    <IonItem>
+                        <IonLabel>Enable MQTT</IonLabel>
+                        <IonToggle checked={mqtt} onIonChange={setMQTT}/>
+                    </IonItem>
+                    {
+                        mqtt ?
+                            <IonRow>
+                                <IonItem>
+                                    <IonLabel>Protocol</IonLabel>
+                                    <IonInput type={"text"} onIonChange={setMQTTProtocol}/>
+                                    {mqttProtocol}
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel>Broker</IonLabel>
+                                    <IonInput type={"text"} onIonChange={setMQTTBroker}/>
+                                    {mqttBroker}
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel>Username</IonLabel>
+                                    <IonInput type={"text"} onIonChange={setMQTTUsername}/>
+                                    {mqttUsername}
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel>Password</IonLabel>
+                                    <IonInput type={"password"} onIonChange={setMQTTPassword}/>
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel>Port</IonLabel>
+                                    <IonInput type={"text"} onIonChange={setMQTTPort}/>
+                                    {mqttPort}
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel>Self Signed Certificate</IonLabel>
+                                    <IonToggle checked={mqttSelfSigned} onIonChange={setMQTTSelfSigned}/>
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel>Base Topic</IonLabel>
+                                    <IonInput type={"text"} onIonChange={setMQTTBaseTopic}/>
+                                    {mqttBaseTopic}
+                                </IonItem>
+                            </IonRow>
+                            :
+                            <></>
+                    }
+                </IonCardContent>
+            </IonCard>
+            <IonCard>
+                <IonCardTitle>
+                    Other Hosts
+                </IonCardTitle>
+                <IonCardContent>
+                    {others}
+                </IonCardContent>
+            </IonCard>
+        </IonContent>
     );
 };
 
