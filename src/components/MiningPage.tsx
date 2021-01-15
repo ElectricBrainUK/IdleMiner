@@ -136,7 +136,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
             }
         });
     } catch (e) {
-        alert("Faled to connect to mqtt broker: " + e.message);
+        console.log("Faled to connect to mqtt broker: " + e.message);
     }
 };
 
