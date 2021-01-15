@@ -118,19 +118,23 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
 
             if (topic === "idleminer/" + hostName + "/mine") {
                 if (message.toString() === "True" || message.toString() === "true") {
-                    console.log("Starting mining manually");
                     miningDisabled = false;
-                    setIsMining(true);
-                    isMining = true;
-                    manuallTriggeredMining = true;
-                    mine();
+                    if (!isMining) {
+                        console.log("Starting mining manually");
+                        setIsMining(true);
+                        isMining = true;
+                        manuallTriggeredMining = true;
+                        mine();
+                    }
                 } else {
-                    console.log("Stopping mining manually");
                     miningDisabled = true;
-                    setIsMining(false);
-                    isMining = false;
-                    if (miningProgram) {
-                        killMiner();
+                    if (isMining) {
+                        console.log("Stopping mining manually");
+                        setIsMining(false);
+                        isMining = false;
+                        if (miningProgram) {
+                            killMiner();
+                        }
                     }
                 }
             }
@@ -187,11 +191,15 @@ if (electron) {
 
 const killMiner = () => {
     console.log("Stopping mining");
-    psTree(miningProgram.pid, (err: any, children: any) => {
-        children.map((p: any) => {
-            process.kill(p.PID);
+    try {
+        psTree(miningProgram.pid, (err: any, children: any) => {
+            children.map((p: any) => {
+                process.kill(p.PID);
+            });
         });
-    });
+    } catch (e) {
+        console.log(e);
+    }
     miningProgram.kill();
     const timeNow = new Date();
     log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
@@ -511,10 +519,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
 
         if (electron) {
             electron.ipcRenderer.on("autoLaunchEnabled", () => {
-               setAutoStart(true);
+                setAutoStart(true);
             });
             electron.ipcRenderer.on("autoLaunchDisabled", () => {
-               setAutoStart(false);
+                setAutoStart(false);
             });
             electron.ipcRenderer.send("isAutoLaunch");
         }
