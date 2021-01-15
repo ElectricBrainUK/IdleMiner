@@ -39,6 +39,7 @@ let miningDisabled: boolean;
 let otherHosts: any = {};
 let setOthers: any;
 let hostName = "";
+let manuallTriggeredMining = false;
 
 let os: any;
 let mqttModule: any;
@@ -103,13 +104,17 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
             let topicParts = topic.split('/');
             if (topicParts[0] === "idleminer" && topicParts[1] !== hostName && topicParts.length === 2) {
                 otherHosts[topicParts[1]] = JSON.parse(message.toString());
-                setOthers(otherHosts);
+                setOthers(Object.assign({}, otherHosts));
             }
 
             if (topic === "idleminer/" + hostName + "/mine") {
                 if (message.toString() === "True" || message.toString() === "true") {
                     console.log("Starting mining manually");
                     miningDisabled = false;
+                    setIsMining(true);
+                    isMining = true;
+                    manuallTriggeredMining = true;
+                    mine();
                 } else {
                     console.log("Stopping mining manually");
                     miningDisabled = true;
@@ -251,6 +256,8 @@ function checkDonation() {
     }
 }
 
+let lastIdle = 0;
+
 const logInspector = () => {
     setTimeout(logInspector, 10000);
     if (miningDisabled) {
@@ -261,18 +268,22 @@ const logInspector = () => {
 
     if (electron && electron.remote && electron.remote.powerMonitor) {
         const idle = electron.remote.powerMonitor.getSystemIdleTime();
+        if (lastIdle > idle) {
+            manuallTriggeredMining = false;
+        }
         if (idle / 60 > maxIdle && !isMining) {
             isMining = true;
             setIsMining(true);
             mine();
             return;
-        } else if (idle / 60 < maxIdle && isMining) {
+        } else if (idle / 60 < maxIdle && isMining && !manuallTriggeredMining) {
             isMining = false;
             setIsMining(false);
             if (miningProgram) {
                 killMiner();
             }
         }
+        lastIdle = idle;
     }
 
     if (!isMining) {
@@ -785,6 +796,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         <IonInput type={"text"} onIonChange={setDir}/>
                         <IonButton onClick={() => {
                             miningDisabled = false;
+                            manuallTriggeredMining = true;
                             setMining(true);
                         }}>Mine
                         </IonButton>
