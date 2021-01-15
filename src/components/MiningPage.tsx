@@ -41,6 +41,7 @@ let otherHosts: any = {};
 let setOthers: any;
 let hostName = "";
 let manuallTriggeredMining = false;
+let mineIdle: boolean;
 
 let os: any;
 let mqttModule: any;
@@ -282,7 +283,7 @@ const logInspector = () => {
 
     logIterations++;
 
-    if (electron && electron.remote && electron.remote.powerMonitor) {
+    if (mineIdle && electron && electron.remote && electron.remote.powerMonitor) {
         const idle = electron.remote.powerMonitor.getSystemIdleTime();
         if (lastIdle > idle) {
             manuallTriggeredMining = false;
@@ -365,6 +366,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [mqttBaseTopic, setMQTTBaseTopici] = useState("");
     const [mqttOtherHosts, setOtherHosts] = useState({});
     const [autoStart, setAutoStart] = useState(false);
+    const [mineIdleI, setMineIdleI] = useState(true);
 
     log = logs;
     setLog = setLogs;
@@ -379,6 +381,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     donation = donationI;
     baseTopic = mqttBaseTopic;
     setOthers = setOtherHosts;
+    mineIdle = mineIdleI;
 
     useEffect(() => {
         Storage.get({key: "dir"}).then(res => {
@@ -441,6 +444,13 @@ const MiningPage: React.FC<ContainerProps> = () => {
         Storage.get({key: "addresses"}).then(res => {
             if (res.value !== null) {
                 donationAddress = JSON.parse(res.value);
+            }
+        });
+
+        Storage.get({key: "mineIdle"}).then(res => {
+            if (res.value !== null) {
+                mineIdle = JSON.parse(res.value);
+                setMineIdleI(JSON.parse(res.value));
             }
         });
 
@@ -713,6 +723,17 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     };
 
+    const setMineIdle = (e: any) => {
+        if (e.detail) {
+            mineIdle = e.detail.checked;
+            setMineIdleI(e.detail.checked);
+            Storage.set({
+                key: "mineIdle",
+                value: JSON.stringify(e.detail.checked)
+            });
+        }
+    };
+
     let donations: any = [];
     Object.keys(donationI).forEach((key: string) => {
         // @ts-ignore
@@ -836,10 +857,20 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 </IonCardTitle>
                 <IonCardContent>
                     <IonItem>
-                        <IonLabel>Mine when idle for this many minutes</IonLabel>
-                        <IonInput type={"number"} onIonChange={setIdleMinutes}/>
+                        <IonLabel>Idle Mine</IonLabel>
+                        <IonToggle checked={mineIdleI} onIonChange={setMineIdle}></IonToggle>
                     </IonItem>
-                    {idleMins}
+                    {
+                        mineIdleI ?
+                            <>
+                                <IonItem>
+                                    <IonLabel>Mine when idle for this many minutes</IonLabel>
+                                    <IonInput type={"number"} onIonChange={setIdleMinutes}/>
+                                </IonItem>
+                                {idleMins}
+                            </>
+                            : <></>
+                    }
                     <IonItem>
                         <IonLabel>Address</IonLabel>
                         <IonInput type={"text"} onIonChange={setAddress}/>
