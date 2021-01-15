@@ -1,16 +1,22 @@
-import {app, ipcRenderer} from "electron";
+import {app, ipcMain, ipcRenderer} from "electron";
 import {createCapacitorElectronApp} from "@capacitor-community/electron";
+const AutoLaunch = require('auto-launch');
 
+let autoLaunch: any;
 // The MainWindow object can be accessed via myCapacitorApp.getMainWindow()
 const myCapacitorApp = createCapacitorElectronApp();
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some Electron APIs can only be used after this event occurs.
 app.on("ready", () => {
     myCapacitorApp.init();
 
-    setTimeout(check, 500);
+    autoLaunch = new AutoLaunch({
+        name: 'Idle Miner',
+        path: process.env.PORTABLE_EXECUTABLE_FILE,
+    });
+
+    // setTimeout(check, 500);
 });
 
 const check = () => {
@@ -47,5 +53,28 @@ app.on("activate", function () {
 });
 
 // Define any IPC or other custom functionality below here
-// @ts-ignore
-global.ipcRenderer = ipcRenderer;
+ipcMain.on("autoLaunchOn", (event, args) => {
+    autoLaunch.isEnabled().then((isEnabled) => {
+        if (!isEnabled) {
+            autoLaunch.enable();
+        }
+    });
+});
+
+ipcMain.on("autoLaunchOff", (event, args) => {
+    autoLaunch.isEnabled().then((isEnabled) => {
+        if (isEnabled) {
+            autoLaunch.disable();
+        }
+    });
+});
+
+ipcMain.on("isAutoLaunch", (event, args) => {
+    autoLaunch.isEnabled().then((isEnabled) => {
+        if (isEnabled) {
+            event.sender.send("autoLaunchEnabled");
+        } else {
+            event.sender.send("autoLaunchDisabled");
+        }
+    });
+});

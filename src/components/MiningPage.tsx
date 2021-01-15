@@ -356,6 +356,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [mqttSelfSigned, setMQTTSelfSignedi] = useState(false);
     const [mqttBaseTopic, setMQTTBaseTopici] = useState("");
     const [mqttOtherHosts, setOtherHosts] = useState({});
+    const [autoStart, setAutoStart] = useState(false);
 
     log = logs;
     setLog = setLogs;
@@ -507,6 +508,16 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 connectToMqtt(values.protocol, values.broker, values.userName, values.password, values.port, values.selfSigned);
             }
         });
+
+        if (electron) {
+            electron.ipcRenderer.on("autoLaunchEnabled", () => {
+               setAutoStart(true);
+            });
+            electron.ipcRenderer.on("autoLaunchDisabled", () => {
+               setAutoStart(false);
+            });
+            electron.ipcRenderer.send("isAutoLaunch");
+        }
     }, []);
 
     const setDir = (e: any) => {
@@ -855,6 +866,22 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 </IonCol>
                             </IonRow>
                         </IonGrid>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>Start on boot</IonLabel>
+                        <IonToggle checked={autoStart} onIonChange={(e) => {
+                            if (e.detail.checked) {
+                                if (electron) {
+                                    electron.ipcRenderer.send("autoLaunchOn");
+                                    setAutoStart(true);
+                                }
+                            } else {
+                                if (electron) {
+                                    electron.ipcRenderer.send("autoLaunchOff");
+                                    setAutoStart(false);
+                                }
+                            }
+                        }}/>
                     </IonItem>
                 </IonCardContent>
             </IonCard>
