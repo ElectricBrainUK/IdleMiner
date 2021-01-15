@@ -9,7 +9,21 @@ const myCapacitorApp = createCapacitorElectronApp();
 // Some Electron APIs can only be used after this event occurs.
 app.on("ready", () => {
     myCapacitorApp.init();
+
+    setTimeout(check, 500);
 });
+
+const check = () => {
+    let mainWindow = myCapacitorApp.getMainWindow();
+    if (mainWindow !== null) {
+        mainWindow.webContents.openDevTools();
+        mainWindow.webContents.on("devtools-opened", () => {
+            myCapacitorApp.getMainWindow().webContents.closeDevTools();
+        });
+    } else {
+        setTimeout(check, 500);
+    }
+};
 
 // Quit when all windows are closed.
 app.on("window-all-closed", function () {

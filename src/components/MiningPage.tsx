@@ -52,7 +52,6 @@ if (window && window.require) {
     mqttModule = window.require('mqtt');
     let string = "" + os.hostname;
     hostName = string.split('.')[0];
-    window.dispatchEvent(new Event('resize'));
 }
 
 let mqttClient: any;
@@ -788,7 +787,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
             </IonItem>
         )
     });
-    // @ts-ignore
+
     return (
         <IonContent className="scroll-content container">
             <br/>
