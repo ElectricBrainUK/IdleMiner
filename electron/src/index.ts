@@ -16,9 +16,14 @@ app.on("window-all-closed", function () {
     // On OS X it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== "darwin") {
-        ipcRenderer.send("exit");
         app.quit();
     }
+});
+
+app.on('before-quit', () => {
+    ipcRenderer.send("exit");
+    myCapacitorApp.getMainWindow().removeAllListeners('close');
+    myCapacitorApp.getMainWindow().close();
 });
 
 app.on("activate", function () {

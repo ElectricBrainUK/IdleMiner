@@ -6,11 +6,12 @@ import {
     IonCard,
     IonCardContent,
     IonCardTitle,
-    IonCol, IonContent,
+    IonCol,
+    IonContent,
     IonGrid,
     IonInput,
     IonItem,
-    IonLabel, IonList,
+    IonLabel,
     IonRange,
     IonRow,
     IonToggle
@@ -43,6 +44,7 @@ let manuallTriggeredMining = false;
 
 let os: any;
 let mqttModule: any;
+let psTree = require('ps-tree');
 if (window && window.require) {
     child = window.require('child_process').spawn;
     electron = window.require('electron');
@@ -50,6 +52,7 @@ if (window && window.require) {
     mqttModule = window.require('mqtt');
     let string = "" + os.hostname;
     hostName = string.split('.')[0];
+    window.dispatchEvent(new Event('resize'));
 }
 
 let mqttClient: any;
@@ -60,7 +63,14 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         password: password,
         port: port,
         host: broker,
-        rejectUnauthorized: !selfSigned
+        rejectUnauthorized: !selfSigned,
+        will: {
+            topic: "idleminer/" + hostName,
+            payload: JSON.stringify({
+                hashRate: "0",
+                isMining: false
+            })
+        }
     };
 
 
@@ -166,28 +176,27 @@ const mine = (altAddress = address) => {
 
 if (electron) {
     electron.ipcRenderer.on("exit", () => {
-        if (miningProgram) {
-            killMiner();
-        }
         if (mqttClient) {
             mqttClient.end();
+        }
+
+        if (miningProgram) {
+            killMiner();
         }
     });
 }
 
 const killMiner = () => {
     console.log("Stopping mining");
+    psTree(miningProgram.pid, (err: any, children: any) => {
+        children.map((p: any) => {
+            process.kill(p.PID);
+        });
+    });
     miningProgram.kill();
     const timeNow = new Date();
     log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
     setLog(log);
-
-    if (mqttClient && mqttClient.connected) {
-        mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-            hashRate: "0",
-            isMining: false
-        }));
-    }
 };
 
 let TEN_MINUTES = 10 * 60 * 1000;
@@ -771,7 +780,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
         others.push(
             <IonItem>
                 <IonLabel>{hostName}</IonLabel>
-                Is Mining: {mqttOtherHost.isMining}
                 Hash Rate: {mqttOtherHost.hashRate}
                 <IonToggle checked={mqttOtherHost.isMining}
                            onIonChange={(e) => {

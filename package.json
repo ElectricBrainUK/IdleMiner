@@ -20,6 +20,7 @@
     "ionicons": "^5.0.0",
     "mqtt": "^4.2.6",
     "ngx-electron": "^2.2.0",
+    "ps-tree": "^1.2.0",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-router": "^5.1.2",
