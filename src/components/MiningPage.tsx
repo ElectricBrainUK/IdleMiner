@@ -199,7 +199,6 @@ const killMiner = () => {
             });
         });
     } catch (e) {
-        console.log(e);
     }
     miningProgram.kill();
     const timeNow = new Date();
@@ -253,13 +252,15 @@ function checkDonation() {
         logIterations = 0;
     }
     let runningTotal = 0;
-    if (logIterations >= donateAfter && !donating) {
+    if (logIterations >= donateAfter) {
         for (let i = 0; i < Object.keys(donation).length; i++) {
             let key = Object.keys(donation)[i];
             if (logIterations < (resetEvery * (donation[key] / 10000)) + donateAfter + runningTotal) {
-                donating = true;
-                console.log("Mining to donation address " + key);
-                mine(donationAddress[key]);
+                if (!donating) {
+                    donating = true;
+                    console.log("Mining to donation address " + key);
+                    mine(donationAddress[key]);
+                }
                 return;
             }
             runningTotal += resetEvery * (donation[key] / 10000);
