@@ -16,6 +16,8 @@ import {
     IonRow,
     IonToggle
 } from "@ionic/react";
+import EBSettingsTextInput from "./EB-Settings-Text-Input";
+import EBSettingsBooleanInput from "./EB-Settings-Boolean-Input";
 
 const {Storage} = Plugins;
 
@@ -830,26 +832,24 @@ const MiningPage: React.FC<ContainerProps> = () => {
     });
 
     return (
-        <IonContent className="scroll-content container">
-            <br/>
-            <br/>
-            <br/>
+        <IonContent className="container">
+            <IonButton onClick={() => {
+                miningDisabled = false;
+                manuallTriggeredMining = true;
+                setMining(true);
+            }}>Mine
+            </IonButton>
+
+            {hashRate}
             <IonCard>
                 <IonCardTitle>
-                    Mining Software Path
+                    Mining
                 </IonCardTitle>
                 <IonCardContent>
-                    <IonItem>
-                        <IonLabel>{directory}</IonLabel>
-                        <IonInput type={"text"} onIonChange={setDir}/>
-                        <IonButton onClick={() => {
-                            miningDisabled = false;
-                            manuallTriggeredMining = true;
-                            setMining(true);
-                        }}>Mine
-                        </IonButton>
-                    </IonItem>
-                    {hashRate}
+                    <EBSettingsTextInput label={"Software Path"} placeholder={directory} onChange={setDir}/>
+                    <EBSettingsTextInput label={"Address"} placeholder={addressI} onChange={setAddress}/>
+                    <EBSettingsTextInput label={"Pool"} placeholder={poolI} onChange={setPool}/>
+                    <EBSettingsTextInput label={"Protocol"} placeholder={protocolI} onChange={setProtocol}/>
                 </IonCardContent>
             </IonCard>
             <IonCard>
@@ -857,10 +857,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                     Preferences
                 </IonCardTitle>
                 <IonCardContent>
-                    <IonItem>
-                        <IonLabel>Idle Mine</IonLabel>
-                        <IonToggle checked={mineIdleI} onIonChange={setMineIdle}></IonToggle>
-                    </IonItem>
+                    <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI} onChange={setMineIdle}/>
                     {
                         mineIdleI ?
                             <>
@@ -872,21 +869,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                             </>
                             : <></>
                     }
-                    <IonItem>
-                        <IonLabel>Address</IonLabel>
-                        <IonInput type={"text"} onIonChange={setAddress}/>
-                    </IonItem>
-                    {addressI}
-                    <IonItem>
-                        <IonLabel>Pool</IonLabel>
-                        <IonInput type={"text"} onIonChange={setPool}/>
-                    </IonItem>
-                    {poolI}
-                    <IonItem>
-                        <IonLabel>Protocol</IonLabel>
-                        <IonInput type={"text"} onIonChange={setProtocol}/>
-                    </IonItem>
-                    {protocolI}
+
                     <IonItem>
                         <IonLabel>Donate {donateI}</IonLabel>
                         <IonGrid>
