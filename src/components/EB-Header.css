@@ -1,0 +1,30 @@
+.toolbar{
+    --background: #212121;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+}
+
+.toolbar > * {
+    display: inline-block;
+    margin-left: 20px;
+    line-height: 40px;
+    transition-duration: 200ms;
+}
+
+.eb-title{
+    font-size: 45px;
+    color: white;
+    text-decoration: none;
+}
+
+.eb-header-divider{
+    height: 40px;
+    width: 2px;
+    margin-bottom: -3px;
+    background-color: white;
+}
+
+.eb-bold {
+    font-weight: bold;
+}
