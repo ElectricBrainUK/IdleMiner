@@ -12,7 +12,7 @@ const EBSettingsBooleanInput: React.FC<TextInputProps> = (props) => {
 
     return (
         <IonItem class={"ion-no-padding"}>
-            <IonLabel style={{maxWidth: "220px", width: "220px"}}>{props.label + ":"}</IonLabel>
+            <IonLabel className="ion-text-wrap" style={{maxWidth: "220px", width: "220px"}}>{props.label + ":"}</IonLabel>
             <IonToggle mode="ios" checked={props.placeholder} onIonChange={props.onChange}/>
         </IonItem>
     );

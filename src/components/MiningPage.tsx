@@ -912,50 +912,15 @@ const MiningPage: React.FC<ContainerProps> = () => {
                     MQTT
                 </IonCardTitle>
                 <IonCardContent>
-                    <IonItem>
-                        <IonLabel>Enable MQTT</IonLabel>
-                        <IonToggle checked={mqtt} onIonChange={setMQTT}/>
-                    </IonItem>
-                    {
-                        mqtt ?
-                            <IonRow>
-                                <IonItem>
-                                    <IonLabel>Protocol</IonLabel>
-                                    <IonInput type={"text"} onIonChange={setMQTTProtocol}/>
-                                    {mqttProtocol}
-                                </IonItem>
-                                <IonItem>
-                                    <IonLabel>Broker</IonLabel>
-                                    <IonInput type={"text"} onIonChange={setMQTTBroker}/>
-                                    {mqttBroker}
-                                </IonItem>
-                                <IonItem>
-                                    <IonLabel>Username</IonLabel>
-                                    <IonInput type={"text"} onIonChange={setMQTTUsername}/>
-                                    {mqttUsername}
-                                </IonItem>
-                                <IonItem>
-                                    <IonLabel>Password</IonLabel>
-                                    <IonInput type={"password"} onIonChange={setMQTTPassword}/>
-                                </IonItem>
-                                <IonItem>
-                                    <IonLabel>Port</IonLabel>
-                                    <IonInput type={"text"} onIonChange={setMQTTPort}/>
-                                    {mqttPort}
-                                </IonItem>
-                                <IonItem>
-                                    <IonLabel>Self Signed Certificate</IonLabel>
-                                    <IonToggle checked={mqttSelfSigned} onIonChange={setMQTTSelfSigned}/>
-                                </IonItem>
-                                <IonItem>
-                                    <IonLabel>Base Topic</IonLabel>
-                                    <IonInput type={"text"} onIonChange={setMQTTBaseTopic}/>
-                                    {mqttBaseTopic}
-                                </IonItem>
-                            </IonRow>
-                            :
-                            <></>
-                    }
+                    <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt} onChange={setMQTT}/>
+                    <EBSettingsTextInput label={"Protocol"} placeholder={mqttProtocol} onChange={setMQTTProtocol}/>
+                    <EBSettingsTextInput label={"Broker"} placeholder={mqttBroker} onChange={setMQTTBroker}/>
+                    <EBSettingsTextInput label={"Port"} placeholder={mqttPort} type="number" onChange={setMQTTPort}/>
+                    <EBSettingsTextInput label={"Base Topic"} placeholder={mqttBaseTopic} onChange={setMQTTBaseTopic}/>
+                    <EBSettingsBooleanInput label={"Self Signed Certificate"}
+                                            placeholder={mqttSelfSigned} onChange={setMQTTSelfSigned}/>
+                    <EBSettingsTextInput label={"Username"} placeholder={mqttUsername} onChange={setMQTTUsername}/>
+                    <EBSettingsTextInput label={"Password"} type="password" onChange={setMQTTPassword}/>
                 </IonCardContent>
             </IonCard>
             <IonCard>

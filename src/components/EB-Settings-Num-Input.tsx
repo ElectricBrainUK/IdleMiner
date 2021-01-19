@@ -5,7 +5,7 @@ interface NumInputProps {
     label: string,
     placeholder: string,
     onChange: any,
-    unit: string
+    unit?: string
 }
 
 const EBSettingsNumInput: React.FC<NumInputProps> = (props) => {
@@ -13,7 +13,8 @@ const EBSettingsNumInput: React.FC<NumInputProps> = (props) => {
     return (
         <IonItem class={"ion-no-padding"}>
             <IonLabel style={{maxWidth: "220px", width: "220px"}}>{props.label + ":"}</IonLabel>
-            <IonInput style={{paddingLeft: "20px", maxWidth: "100px", width: "100px"}} placeholder={props.placeholder} type={"number"} onIonChange={props.onChange}/>
+            <IonInput className="ion-text-wrap" style={{paddingLeft: "20px", maxWidth: "100px", width: "100px"}}
+                      placeholder={props.placeholder} type={"number"} onIonChange={props.onChange}/>
             <IonLabel style={{paddingLeft: "20px", maxWidth: "220px", width: "220px"}}>{props.unit}</IonLabel>
         </IonItem>
     );
