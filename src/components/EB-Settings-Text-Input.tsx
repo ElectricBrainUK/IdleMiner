@@ -11,9 +11,11 @@ interface TextInputProps {
 const EBSettingsTextInput: React.FC<TextInputProps> = (props) => {
 
     return (
-        <IonItem class={"ion-no-padding"}>
+        <IonItem lines="none" class={"ion-no-padding"}>
             <IonLabel className="ion-text-wrap" style={{maxWidth: "220px", width: "220px"}}>{props.label + ":"}</IonLabel>
-            <IonInput placeholder={props.placeholder} type={props.type} onIonChange={props.onChange}/>
+            <IonItem style={{flexGrow: 1}} class={"ion-no-padding"}>
+                <IonInput placeholder={props.placeholder} type={props.type} onIonChange={props.onChange}/>
+            </IonItem>
         </IonItem>
     );
 };

@@ -1,14 +1,15 @@
-.container *{
-  /*color: #212121;*/
-  color: white;
+.container {
+  margin: auto;
+  max-width: 960px;
 }
 
 ion-card {
-  max-width: 960px;
+  box-shadow: none !important;
 }
 
 ion-card-content {
   padding: 0 0 0 20px !important;
+  margin-bottom: 30px !important;
 }
 
 ion-card-content * {

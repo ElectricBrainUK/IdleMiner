@@ -13,12 +13,14 @@ interface NumInputProps {
 const EBSettingsNumInput: React.FC<NumInputProps> = (props) => {
 
     return (
-        <IonItem class={"ion-no-padding"}>
+        <IonItem lines="none" class={"ion-no-padding"}>
             <IonLabel style={{maxWidth: "220px", width: "220px"}}>{props.label + ":"}</IonLabel>
-            <IonInput min={props.min} max={props.max} className="ion-text-wrap"
-                      style={{paddingLeft: "20px", maxWidth: "100px", width: "100px"}}
-                      placeholder={props.placeholder} type={"number"} onIonChange={props.onChange}/>
-            <IonLabel style={{paddingLeft: "20px", maxWidth: "220px", width: "220px"}}>{props.unit}</IonLabel>
+            <IonItem style={{flexGrow: 1}} class={"ion-no-padding"}>
+                <IonInput min={props.min} max={props.max} className="ion-text-wrap"
+                          style={{paddingLeft: "20px", maxWidth: "100px", width: "100px"}}
+                          placeholder={props.placeholder} type={"number"} onIonChange={props.onChange}/>
+                <IonLabel style={{paddingLeft: "20px", maxWidth: "220px", width: "220px"}}>{props.unit}</IonLabel>
+            </IonItem>
         </IonItem>
     );
 };
