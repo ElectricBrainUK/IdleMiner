@@ -880,29 +880,18 @@ const MiningPage: React.FC<ContainerProps> = () => {
             </IonCard>
             <IonCard>
                 <IonCardTitle>
-                    Preferences
+                    Donations
                 </IonCardTitle>
                 <IonCardContent>
-
+                    <EBSettingsBooleanInput label={"Support Us"} placeholder={donateI} onChange={setDonate}/>
                     <IonItem>
                         <IonLabel>Donate {donateI}</IonLabel>
-                        <IonGrid>
-                            <IonRow>
-                                <IonCol>
-                                    <IonToggle checked={donateI} onIonChange={setDonate}/>
-                                </IonCol>
-                                <IonCol>
-                                    <IonRow>
-                                        {
-                                            donateI ?
-                                                donations
-                                                :
-                                                <></>
-                                        }
-                                    </IonRow>
-                                </IonCol>
-                            </IonRow>
-                        </IonGrid>
+                        {
+                            donateI ?
+                                donations
+                                :
+                                <></>
+                        }
                     </IonItem>
 
                 </IonCardContent>
