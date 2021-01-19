@@ -1,6 +1,5 @@
 import {IonInput, IonItem, IonLabel} from '@ionic/react';
 import React from 'react';
-import './EB-Settings-Text-Input.css';
 
 interface TextInputProps {
     label: string,
