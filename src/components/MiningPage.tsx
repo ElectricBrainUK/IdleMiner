@@ -19,6 +19,9 @@ import {
 import EBSettingsTextInput from "./EB-Settings-Text-Input";
 import EBSettingsBooleanInput from "./EB-Settings-Boolean-Input";
 import EBSettingsNumInput from "./EB-Settings-Num-Input";
+import EBSettingsDoubleTextInput from "./EB-Settings-Double-Text-Input";
+import EBSettingsDonationInput from "./EB-Settings-Donation-Input";
+import EBSettingsSupportUs from "./EB-Settings-Support-Us";
 
 const {Storage} = Plugins;
 
@@ -752,82 +755,56 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     };
 
+    const setNewAddress = () => {
+        if (newDonationAddress !== "" && newDonationName !== "" && newDonationAddress.substring(0, 2) === "0x" && newDonationAddress.length === donationAddress.default.length) {
+            addDonationAddress(newDonationName, newDonationAddress);
+        } else {
+            alert("Invalid Address");
+        }
+    };
+
     let donations: any = [];
     Object.keys(donationI).forEach((key: string) => {
         // @ts-ignore
         let donationMaximumElement = donationMaximum[key];
         // @ts-ignore
         let donationIElement = donationI[key];
-        donations.push(<IonCol key={key}>
-            <IonRow>
-                <IonRange min={0} max={Number(donationMaximumElement.toFixed(2))}
-                          value={donationIElement} color="secondary"
-                          onIonChange={(e: any) => {
-                              if (e.detail.value !== Number(donationIElement)) {
-                                  setDonation(e, key);
-                              }
-                          }}>
-                    <IonLabel slot="start">0</IonLabel>
-                    <IonLabel
-                        slot="end">{(donationMaximumElement / 100).toFixed(2)}</IonLabel>
-                </IonRange>
-            </IonRow>
-            <IonRow>
-                <IonInput type={"text"} value={donationIElement / 100}
-                          onIonChange={(e: any) => {
-                              if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement / 100) {
-                                  e.detail.value *= 100;
-                                  setDonation(e, key);
-                              }
-                          }}/>
-            </IonRow>
-            <IonRow>
-                <IonItem>
-                    <IonLabel>{key}</IonLabel>
-                    <br/>
-                    {donationAddress[key]}
-                </IonItem>
-            </IonRow>
-            {
-                key !== "default" ?
-                    <IonRow>
-                        <IonButton onClick={() => {
-                            removeDonationAddress(key)
-                        }}>Remove</IonButton>
-                    </IonRow>
-                    :
-                    <></>
-            }
-        </IonCol>);
+        donations.push(
+            <IonRow key={key}>
+
+                {
+                    key !== "default" ?
+                        <>
+                            <EBSettingsDonationInput label={key} onChangeBool={() => {}} submit={() => {
+                                removeDonationAddress(key)
+                            }} placeholderNum={donationIElement} onChangeNum={(e: any) => {
+                                if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
+                                    setDonation(e, key);
+                                }
+                            }} min={"0"} max={"100"} infoLabel={donationAddress[key]}/>
+                        </>
+                        :
+                        <>
+                            <EBSettingsSupportUs label={"Support Us"} placeholderBool={donateI} placeholderNum={donationIElement}
+                                               onChangeBool={setDonate} onChangeNum={(e: any) => {
+                            if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
+                                setDonation(e, key);
+                            }
+                            }}/>
+                        </>
+                }
+
+            </IonRow>);
     });
 
     donations.push(
-        <IonCol key={"newDonation"}>
-            <IonRow>
-                New Donation
-            </IonRow>
-            <IonRow>
-                <IonItem>
-                    <IonLabel>Name</IonLabel>
-                    <IonInput type={"text"} onIonChange={(e: any) => {
-                        setNewDonationName(e.detail.value);
-                    }}/>
-                </IonItem>
-                <IonItem>
-                    <IonLabel>Address</IonLabel>
-                    <IonInput type={"text"} onIonChange={(e: any) => {
-                        setNewDonationAddress(e.detail.value);
-                    }}/>
-                </IonItem>
-                <IonButton onClick={() => {
-                    if (newDonationAddress !== "" && newDonationName !== "" && newDonationAddress.substring(0, 2) === "0x" && newDonationAddress.length === donationAddress.default.length) {
-                        addDonationAddress(newDonationName, newDonationAddress);
-                    } else {
-                        alert("Invalid Address");
-                    }
-                }}>Add</IonButton>
-            </IonRow>
-        </IonCol>);
+        <EBSettingsDoubleTextInput key={"newDonation"} label={"New Donation"} submit={setNewAddress}
+                                   placeholder2={"Address"} onChange2={(e: any) => {
+            setNewDonationAddress(e.detail.value);
+        }}
+                                   placeholder1={"Name"} onChange1={(e: any) => {
+            setNewDonationName(e.detail.value);
+        }}/>);
 
     let others: any = [];
 
@@ -847,7 +824,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     });
 
     return (
-        <IonContent >
+        <IonContent>
             <div className="container">
                 <IonButton onClick={() => {
                     miningDisabled = false;
@@ -873,10 +850,12 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         Preferences
                     </IonCardTitle>
                     <IonCardContent>
-                        <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI} onChange={setMineIdle}/>
+                        <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI}
+                                                onChange={setMineIdle}/>
                         <EBSettingsNumInput label={"Idle Mining Delay"} placeholder={idleMins.toString()}
-                                            onChange={setIdleMinutes} unit={"minutes"}/>
-                        <EBSettingsBooleanInput label={"Start On Boot"} placeholder={autoStart} onChange={setStartOnBoot}/>
+                                            onChange={setIdleMinutes} unit={"minutes"} min={"0"}/>
+                        <EBSettingsBooleanInput label={"Start On Boot"} placeholder={autoStart}
+                                                onChange={setStartOnBoot}/>
                     </IonCardContent>
                 </IonCard>
                 <IonCard>
@@ -884,16 +863,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         Donations
                     </IonCardTitle>
                     <IonCardContent>
-                        <EBSettingsBooleanInput label={"Support Us"} placeholder={donateI} onChange={setDonate}/>
-                        <IonItem>
-                            <IonLabel>Donate {donateI}</IonLabel>
-                            {
-                                donateI ?
-                                    donations
-                                    :
-                                    <></>
-                            }
-                        </IonItem>
+
+                        {donations}
 
                     </IonCardContent>
                 </IonCard>
@@ -905,8 +876,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt} onChange={setMQTT}/>
                         <EBSettingsTextInput label={"Protocol"} placeholder={mqttProtocol} onChange={setMQTTProtocol}/>
                         <EBSettingsTextInput label={"Broker"} placeholder={mqttBroker} onChange={setMQTTBroker}/>
-                        <EBSettingsTextInput label={"Port"} placeholder={mqttPort} type="number" onChange={setMQTTPort}/>
-                        <EBSettingsTextInput label={"Base Topic"} placeholder={mqttBaseTopic} onChange={setMQTTBaseTopic}/>
+                        <EBSettingsTextInput label={"Port"} placeholder={mqttPort} type="number"
+                                             onChange={setMQTTPort}/>
+                        <EBSettingsTextInput label={"Base Topic"} placeholder={mqttBaseTopic}
+                                             onChange={setMQTTBaseTopic}/>
                         <EBSettingsBooleanInput label={"Self Signed Certificate"}
                                                 placeholder={mqttSelfSigned} onChange={setMQTTSelfSigned}/>
                         <EBSettingsTextInput label={"Username"} placeholder={mqttUsername} onChange={setMQTTUsername}/>
