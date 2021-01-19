@@ -17,7 +17,7 @@ const EBHeader: React.FC<HeaderProps> = (props) => {
            clss += " eb-bold";
         }
         options.push(
-            <Link to={"/"+title} className={clss}>{title}</Link>
+            <Link key={title} to={"/"+title} className={clss}>{title}</Link>
         );
     });
 
