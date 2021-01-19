@@ -16,6 +16,11 @@
     font-size: 45px;
     color: white;
     text-decoration: none;
+    cursor: pointer;
+}
+
+.regular-cursor {
+    cursor: default;
 }
 
 .eb-header-divider{

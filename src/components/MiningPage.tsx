@@ -848,7 +848,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                       secondaryTitles={["Dashboard", "Settings"]}/>
             <IonContent>
                 <div className={"centre"}>
-                    <div className={onPage === 0 ? enabledCss : disabledCss}>
+                    <div className={onPage !== 0 ? enabledCss : disabledCss}>
                         <IonCard>
                             <IonCardTitle>
                                 Mining
@@ -907,7 +907,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                             </IonCardContent>
                         </IonCard>
                     </div>
-                    <div className={onPage === 0 ? disabledCss : enabledCss}>
+                    <div className={onPage === 0 ? enabledCss : disabledCss}>
                         <IonButton onClick={() => {
                             miningDisabled = false;
                             manuallTriggeredMining = true;

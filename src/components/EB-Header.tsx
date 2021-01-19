@@ -22,7 +22,7 @@ const EBHeader: React.FC<HeaderProps> = (props) => {
     return (
         <IonHeader>
             <IonToolbar class="toolbar">
-                <IonLabel class="eb-title eb-bold">{props.mainTitle}</IonLabel>
+                <IonLabel class="eb-title eb-bold regular-cursor">{props.mainTitle}</IonLabel>
                 <div className="eb-header-divider"/>
                 {options}
             </IonToolbar>
