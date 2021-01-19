@@ -2,12 +2,15 @@
   margin: auto;
   max-width: 960px;
   position: relative;
+  padding-top: 20px;
 }
 
 .container {
   position: absolute;
   opacity: 1;
   transition-duration: 1s;
+  text-align: center;
+  width: 100%;
 }
 
 .invisible {
@@ -16,6 +19,8 @@
 
 ion-card {
   box-shadow: none !important;
+  text-align: left;
+  width: 100%;
 }
 
 ion-card-content {

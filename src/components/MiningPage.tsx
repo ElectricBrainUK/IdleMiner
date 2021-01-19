@@ -19,8 +19,11 @@ import EBSettingsDoubleTextInput from "./EB-Settings-Double-Text-Input";
 import EBSettingsDonationInput from "./EB-Settings-Donation-Input";
 import EBSettingsSupportUs from "./EB-Settings-Support-Us";
 import EBHeader from "./EB-Header";
+import EBSettingsInfo from "./EB-Settings-Info";
 
 const {Storage} = Plugins;
+
+let iter = 0;
 
 let child: any;
 let electron: any;
@@ -32,6 +35,8 @@ let isMining = false;
 let setIsMining: any;
 let setHashRate: any;
 let hashRate: string;
+let setHashRateUnit: any;
+let hashRateUnit: string;
 let maxIdle: number;
 let address: string;
 let protocol: string;
@@ -70,7 +75,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         will: {
             topic: "idleminer/" + hostName,
             payload: JSON.stringify({
-                hashRate: "0",
+                hashRate: "0 " + hashRateUnit,
                 isMining: false
             })
         }
@@ -104,7 +109,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
                         "command_topic": "idleminer/" + hostName + "/mine"
                     }));
                     mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-                        hashRate,
+                        hashRate: hashRate + " " + hashRateUnit,
                         isMining
                     }));
 
@@ -160,8 +165,8 @@ const appendToLog = (data: string) => {
             log.push(line);
         }
     });
-
-    setLog(log);
+    iter++;
+    setLog(Object.assign([], log));
 };
 
 const mine = (altAddress = address) => {
@@ -204,6 +209,8 @@ const killMiner = () => {
     } catch (e) {
     }
     miningProgram.kill();
+    hashRate = "0";
+    setHashRate("0");
     const timeNow = new Date();
     log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
     setLog(log);
@@ -240,6 +247,9 @@ const getMiningDetails = (split: string[], logLine: string, i: number) => {
 
     setHashRate(split[6]);
     hashRate = split[6];
+
+    setHashRateUnit(split[6]);
+    hashRateUnit = split[6];
 };
 
 let logIterations = 0;
@@ -337,7 +347,7 @@ const logInspector = () => {
 
     if (mqttClient && mqttClient.connected) {
         mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-            hashRate,
+            hashRate: hashRate + " " + hashRateUnit,
             isMining
         }));
     }
@@ -358,7 +368,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [idleMins, setIdleMins] = useState(0);
     const [logs, setLogs] = useState([]);
     const [mining, setMining] = useState(false);
-    const [hashRate, setHashRateI] = useState("");
+    const [hashRate, setHashRateI] = useState("0");
+    const [hashRateUnit, setHashRateUnitI] = useState("MH");
     const [addressI, setAddressI] = useState("0x21313903459f75c08d3c99980f34fc41a7ef8564");
     const [poolI, setPoolI] = useState("eu1.ethermine.org:5555");
     const [protocolI, setProtocolI] = useState("stratum+tls");
@@ -379,6 +390,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [autoStart, setAutoStart] = useState(false);
     const [mineIdleI, setMineIdleI] = useState(true);
     const [onPage, setOnPage] = useState(0);
+    const [viewFullLog, setViewFullLog] = useState(false);
 
     const enabledCss = "container";
     const disabledCss = "container invisible";
@@ -388,6 +400,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     isMining = mining;
     setIsMining = setMining;
     setHashRate = setHashRateI;
+    setHashRateUnit = setHashRateUnitI;
     maxIdle = idleMins;
     address = addressI;
     pool = poolI;
@@ -758,6 +771,14 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     };
 
+    const setStartMining = (e: any) => {
+        miningDisabled = false;
+        if (e.detail) {
+            manuallTriggeredMining = e.detail.checked;
+            setMining(e.detail.checked);
+        }
+    }
+
     const setStartOnBoot = (e: any) => {
         if (e.detail.checked) {
             if (electron) {
@@ -831,15 +852,16 @@ const MiningPage: React.FC<ContainerProps> = () => {
         // @ts-ignore
         let mqttOtherHost = mqttOtherHosts[hostName];
         others.push(
-            <IonItem>
-                <IonLabel>{hostName}</IonLabel>
-                Hash Rate: {mqttOtherHost.hashRate}
-                <IonToggle checked={mqttOtherHost.isMining}
-                           onIonChange={(e) => {
-                               mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked))
-                           }}/>
-            </IonItem>
+            <EBSettingsBooleanInput label={hostName} placeholder={mqttOtherHost.isMining} onChange={(e: any) => {
+                mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked))
+            }} secondaryLabel={mqttOtherHost.hashRate}/>
         )
+    });
+    let logDisplay: any = [];
+    logs.slice(viewFullLog ? 0 : Math.max(logs.length - 10, 0)).forEach(logLine => {
+        logDisplay.push(
+            <EBSettingsInfo label={logLine}/>
+        );
     });
 
     return (
@@ -908,21 +930,53 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         </IonCard>
                     </div>
                     <div className={onPage === 0 ? enabledCss : disabledCss}>
-                        <IonButton onClick={() => {
-                            miningDisabled = false;
-                            manuallTriggeredMining = true;
-                            setMining(true);
-                        }}>Mine
-                        </IonButton>
+                        {!viewFullLog ?
+                            <>
+                                {!mining ?
+                                    <IonButton style={{fontSize: "16px"}} onClick={() => {
+                                        miningDisabled = false;
+                                        manuallTriggeredMining = true;
+                                        setMining(true);
+                                    }}>
+                                        Start Mining
+                                    </IonButton>
+                                    :
+                                    <IonButton style={{fontSize: "16px"}} onClick={() => {
+                                        miningDisabled = false;
+                                        manuallTriggeredMining = false;
+                                        setMining(false);
+                                    }}>
+                                        Stop Mining
+                                    </IonButton>
+                                }
 
-                        {hashRate}
-
+                                <IonCard>
+                                    <IonCardTitle>
+                                        Hosts
+                                    </IonCardTitle>
+                                    <IonCardContent>
+                                        <EBSettingsBooleanInput label={"This Machine"} placeholder={mining}
+                                                                onChange={setStartMining}
+                                                                secondaryLabel={hashRate + " " + hashRateUnit + "/s"}/>
+                                        {others}
+                                    </IonCardContent>
+                                </IonCard>
+                            </>
+                            :
+                            <></>
+                        }
                         <IonCard>
                             <IonCardTitle>
-                                Other Hosts
+                                Log
+                                <div style={{display: "inline-block", width:"600px", flexGrow: 1}}/>
+                                <IonButton style={{fontSize: "16px"}} onClick={() => {
+                                    setViewFullLog(!viewFullLog)
+                                }}>
+                                    {viewFullLog ?  "Hide" : "Show Full Log"}
+                                </IonButton>
                             </IonCardTitle>
                             <IonCardContent>
-                                {others}
+                                {logDisplay}
                             </IonCardContent>
                         </IonCard>
                     </div>
