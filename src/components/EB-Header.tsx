@@ -1,23 +1,21 @@
 import {IonHeader, IonLabel, IonToolbar} from '@ionic/react';
 import React from 'react';
 import './EB-Header.css';
-import {Link} from "react-router-dom";
 
 interface HeaderProps {
     mainTitle: string,
-    secondaryTitles: string[]
+    secondaryTitles: string[],
+    selected?: number,
+    onClick: any
 }
 
 const EBHeader: React.FC<HeaderProps> = (props) => {
     const options: any = [];
 
-    props.secondaryTitles.forEach((title: string) => {
-        let clss = "eb-title";
-        if (window.location.pathname === "/" + title){
-           clss += " eb-bold";
-        }
+    props.secondaryTitles.forEach((title: string, i: number) => {
         options.push(
-            <Link key={title} to={"/"+title} className={clss}>{title}</Link>
+            <IonLabel onClick={() => props.onClick(i)} key={title}
+                      className={"eb-title" + (i === props.selected ? " eb-bold" : "")}>{title}</IonLabel>
         );
     });
 
@@ -31,5 +29,9 @@ const EBHeader: React.FC<HeaderProps> = (props) => {
         </IonHeader>
     );
 };
+
+EBHeader.defaultProps = {
+    selected: 0
+}
 
 export default EBHeader;

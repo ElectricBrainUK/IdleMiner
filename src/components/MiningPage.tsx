@@ -6,13 +6,9 @@ import {
     IonCard,
     IonCardContent,
     IonCardTitle,
-    IonCol,
     IonContent,
-    IonGrid,
-    IonInput,
     IonItem,
-    IonLabel,
-    IonRange,
+    IonLabel, IonPage,
     IonRow,
     IonToggle
 } from "@ionic/react";
@@ -22,6 +18,7 @@ import EBSettingsNumInput from "./EB-Settings-Num-Input";
 import EBSettingsDoubleTextInput from "./EB-Settings-Double-Text-Input";
 import EBSettingsDonationInput from "./EB-Settings-Donation-Input";
 import EBSettingsSupportUs from "./EB-Settings-Support-Us";
+import EBHeader from "./EB-Header";
 
 const {Storage} = Plugins;
 
@@ -381,6 +378,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [mqttOtherHosts, setOtherHosts] = useState({});
     const [autoStart, setAutoStart] = useState(false);
     const [mineIdleI, setMineIdleI] = useState(true);
+    const [onPage, setOnPage] = useState(0);
+
+    const enabledCss = "container";
+    const disabledCss = "container invisible";
 
     log = logs;
     setLog = setLogs;
@@ -552,6 +553,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     }, []);
 
+    const setPage = (i: number) => {
+        console.log(i);
+        setOnPage(i);
+    };
     const setDir = (e: any) => {
         setDirectory(e.detail.value);
         Storage.set({
@@ -787,7 +792,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 {
                     key !== "default" ?
                         <>
-                            <EBSettingsDonationInput label={key} placeholderBool={donate[i]}  onChangeBool={(e: any) => {
+                            <EBSettingsDonationInput label={key} placeholderBool={donate[i]} onChangeBool={(e: any) => {
                                 setDonate(e, i)
                             }} submit={() => {
                                 removeDonationAddress(key, i)
@@ -822,7 +827,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }}/>);
 
     let others: any = [];
-
     Object.keys(mqttOtherHosts).forEach(hostName => {
         // @ts-ignore
         let mqttOtherHost = mqttOtherHosts[hostName];
@@ -839,78 +843,92 @@ const MiningPage: React.FC<ContainerProps> = () => {
     });
 
     return (
-        <IonContent>
-            <div className="container">
-                <IonButton onClick={() => {
-                    miningDisabled = false;
-                    manuallTriggeredMining = true;
-                    setMining(true);
-                }}>Mine
-                </IonButton>
+        <IonPage>
+            <EBHeader mainTitle={"Mine"} onClick={setPage} selected={onPage}
+                      secondaryTitles={["Dashboard", "Settings"]}/>
+            <IonContent>
+                <div className={"centre"}>
+                    <div className={onPage === 0 ? enabledCss : disabledCss}>
+                        <IonCard>
+                            <IonCardTitle>
+                                Mining
+                            </IonCardTitle>
+                            <IonCardContent>
+                                <EBSettingsTextInput label={"Software Path"} placeholder={directory}
+                                                     onChange={setDir}/>
+                                <EBSettingsTextInput label={"Address"} placeholder={addressI}
+                                                     onChange={setAddress}/>
+                                <EBSettingsTextInput label={"Pool"} placeholder={poolI} onChange={setPool}/>
+                                <EBSettingsTextInput label={"Protocol"} placeholder={protocolI}
+                                                     onChange={setProtocol}/>
+                            </IonCardContent>
+                        </IonCard>
+                        <IonCard>
+                            <IonCardTitle>
+                                Preferences
+                            </IonCardTitle>
+                            <IonCardContent>
+                                <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI}
+                                                        onChange={setMineIdle}/>
+                                <EBSettingsNumInput label={"Idle Mining Delay"} placeholder={idleMins.toString()}
+                                                    onChange={setIdleMinutes} unit={"minutes"} min={"0"}/>
+                                <EBSettingsBooleanInput label={"Start On Boot"} placeholder={autoStart}
+                                                        onChange={setStartOnBoot}/>
+                            </IonCardContent>
+                        </IonCard>
+                        <IonCard>
+                            <IonCardTitle>
+                                Donations
+                            </IonCardTitle>
+                            <IonCardContent>
+                                {donations}
+                            </IonCardContent>
+                        </IonCard>
+                        <IonCard>
+                            <IonCardTitle>
+                                MQTT
+                            </IonCardTitle>
+                            <IonCardContent>
+                                <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt}
+                                                        onChange={setMQTT}/>
+                                <EBSettingsTextInput label={"Protocol"} placeholder={mqttProtocol}
+                                                     onChange={setMQTTProtocol}/>
+                                <EBSettingsTextInput label={"Broker"} placeholder={mqttBroker}
+                                                     onChange={setMQTTBroker}/>
+                                <EBSettingsTextInput label={"Port"} placeholder={mqttPort} type="number"
+                                                     onChange={setMQTTPort}/>
+                                <EBSettingsTextInput label={"Base Topic"} placeholder={mqttBaseTopic}
+                                                     onChange={setMQTTBaseTopic}/>
+                                <EBSettingsBooleanInput label={"Self Signed Certificate"}
+                                                        placeholder={mqttSelfSigned} onChange={setMQTTSelfSigned}/>
+                                <EBSettingsTextInput label={"Username"} placeholder={mqttUsername}
+                                                     onChange={setMQTTUsername}/>
+                                <EBSettingsTextInput label={"Password"} type="password" onChange={setMQTTPassword}/>
+                            </IonCardContent>
+                        </IonCard>
+                    </div>
+                    <div className={onPage === 0 ? disabledCss : enabledCss}>
+                        <IonButton onClick={() => {
+                            miningDisabled = false;
+                            manuallTriggeredMining = true;
+                            setMining(true);
+                        }}>Mine
+                        </IonButton>
 
-                {hashRate}
-                <IonCard>
-                    <IonCardTitle>
-                        Mining
-                    </IonCardTitle>
-                    <IonCardContent>
-                        <EBSettingsTextInput label={"Software Path"} placeholder={directory} onChange={setDir}/>
-                        <EBSettingsTextInput label={"Address"} placeholder={addressI} onChange={setAddress}/>
-                        <EBSettingsTextInput label={"Pool"} placeholder={poolI} onChange={setPool}/>
-                        <EBSettingsTextInput label={"Protocol"} placeholder={protocolI} onChange={setProtocol}/>
-                    </IonCardContent>
-                </IonCard>
-                <IonCard>
-                    <IonCardTitle>
-                        Preferences
-                    </IonCardTitle>
-                    <IonCardContent>
-                        <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI}
-                                                onChange={setMineIdle}/>
-                        <EBSettingsNumInput label={"Idle Mining Delay"} placeholder={idleMins.toString()}
-                                            onChange={setIdleMinutes} unit={"minutes"} min={"0"}/>
-                        <EBSettingsBooleanInput label={"Start On Boot"} placeholder={autoStart}
-                                                onChange={setStartOnBoot}/>
-                    </IonCardContent>
-                </IonCard>
-                <IonCard>
-                    <IonCardTitle>
-                        Donations
-                    </IonCardTitle>
-                    <IonCardContent>
+                        {hashRate}
 
-                        {donations}
-
-                    </IonCardContent>
-                </IonCard>
-                <IonCard>
-                    <IonCardTitle>
-                        MQTT
-                    </IonCardTitle>
-                    <IonCardContent>
-                        <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt} onChange={setMQTT}/>
-                        <EBSettingsTextInput label={"Protocol"} placeholder={mqttProtocol} onChange={setMQTTProtocol}/>
-                        <EBSettingsTextInput label={"Broker"} placeholder={mqttBroker} onChange={setMQTTBroker}/>
-                        <EBSettingsTextInput label={"Port"} placeholder={mqttPort} type="number"
-                                             onChange={setMQTTPort}/>
-                        <EBSettingsTextInput label={"Base Topic"} placeholder={mqttBaseTopic}
-                                             onChange={setMQTTBaseTopic}/>
-                        <EBSettingsBooleanInput label={"Self Signed Certificate"}
-                                                placeholder={mqttSelfSigned} onChange={setMQTTSelfSigned}/>
-                        <EBSettingsTextInput label={"Username"} placeholder={mqttUsername} onChange={setMQTTUsername}/>
-                        <EBSettingsTextInput label={"Password"} type="password" onChange={setMQTTPassword}/>
-                    </IonCardContent>
-                </IonCard>
-                <IonCard>
-                    <IonCardTitle>
-                        Other Hosts
-                    </IonCardTitle>
-                    <IonCardContent>
-                        {others}
-                    </IonCardContent>
-                </IonCard>
-            </div>
-        </IonContent>
+                        <IonCard>
+                            <IonCardTitle>
+                                Other Hosts
+                            </IonCardTitle>
+                            <IonCardContent>
+                                {others}
+                            </IonCardContent>
+                        </IonCard>
+                    </div>
+                </div>
+            </IonContent>
+        </IonPage>
     );
 };
 

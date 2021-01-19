@@ -5,10 +5,7 @@ import EBHeader from "../components/EB-Header";
 
 const Settings: React.FC = () => {
     return (
-        <IonPage>
-            <EBHeader mainTitle={"Mine"} secondaryTitles={["Dashboard", "Settings"]}/>
             <MiningPage/>
-        </IonPage>
     );
 };
 

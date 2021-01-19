@@ -7,7 +7,6 @@ import './Dashboard.css';
 const Dashboard: React.FC = () => {
     return (
         <IonPage>
-            <EBHeader mainTitle={"Mine"} secondaryTitles={["Dashboard", "Settings"]}/>
         </IonPage>
     );
 };

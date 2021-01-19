@@ -1,6 +1,17 @@
-.container {
+.centre {
   margin: auto;
   max-width: 960px;
+  position: relative;
+}
+
+.container {
+  position: absolute;
+  opacity: 1;
+  transition-duration: 1s;
+}
+
+.invisible {
+  opacity: 0;
 }
 
 ion-card {
