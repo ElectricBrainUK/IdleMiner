@@ -18,6 +18,7 @@ import {
 } from "@ionic/react";
 import EBSettingsTextInput from "./EB-Settings-Text-Input";
 import EBSettingsBooleanInput from "./EB-Settings-Boolean-Input";
+import EBSettingsNumInput from "./EB-Settings-Num-Input";
 
 const {Storage} = Plugins;
 
@@ -737,6 +738,20 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     };
 
+    const setStartOnBoot = (e: any) => {
+        if (e.detail.checked) {
+            if (electron) {
+                electron.ipcRenderer.send("autoLaunchOn");
+                setAutoStart(true);
+            }
+        } else {
+            if (electron) {
+                electron.ipcRenderer.send("autoLaunchOff");
+                setAutoStart(false);
+            }
+        }
+    };
+
     let donations: any = [];
     Object.keys(donationI).forEach((key: string) => {
         // @ts-ignore
@@ -858,17 +873,16 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 </IonCardTitle>
                 <IonCardContent>
                     <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI} onChange={setMineIdle}/>
-                    {
-                        mineIdleI ?
-                            <>
-                                <IonItem>
-                                    <IonLabel>Mine when idle for this many minutes</IonLabel>
-                                    <IonInput type={"number"} onIonChange={setIdleMinutes}/>
-                                </IonItem>
-                                {idleMins}
-                            </>
-                            : <></>
-                    }
+                    <EBSettingsNumInput label={"Idle Mining Delay"} placeholder={idleMins.toString()}
+                                        onChange={setIdleMinutes} unit={"minutes"}/>
+                    <EBSettingsBooleanInput label={"Start On Boot"} placeholder={autoStart} onChange={setStartOnBoot}/>
+                </IonCardContent>
+            </IonCard>
+            <IonCard>
+                <IonCardTitle>
+                    Preferences
+                </IonCardTitle>
+                <IonCardContent>
 
                     <IonItem>
                         <IonLabel>Donate {donateI}</IonLabel>
@@ -890,22 +904,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                             </IonRow>
                         </IonGrid>
                     </IonItem>
-                    <IonItem>
-                        <IonLabel>Start on boot</IonLabel>
-                        <IonToggle checked={autoStart} onIonChange={(e) => {
-                            if (e.detail.checked) {
-                                if (electron) {
-                                    electron.ipcRenderer.send("autoLaunchOn");
-                                    setAutoStart(true);
-                                }
-                            } else {
-                                if (electron) {
-                                    electron.ipcRenderer.send("autoLaunchOff");
-                                    setAutoStart(false);
-                                }
-                            }
-                        }}/>
-                    </IonItem>
+
                 </IonCardContent>
             </IonCard>
             <IonCard>
