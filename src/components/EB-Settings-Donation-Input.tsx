@@ -1,6 +1,5 @@
-import {IonButton, IonInput, IonItem, IonLabel, IonToggle} from '@ionic/react';
+import {IonButton, IonImg, IonInput, IonItem, IonLabel, IonToggle} from '@ionic/react';
 import React from 'react';
-import {Simulate} from "react-dom/test-utils";
 
 interface TextInputProps {
     label: string,
@@ -27,7 +26,9 @@ const EBSettingsDonationInput: React.FC<TextInputProps> = (props) => {
                           placeholder={props.placeholderNum} type={"number"} onIonChange={props.onChangeNum}/>
                 <IonLabel style={{paddingLeft: "20px", flexShrink: 0}}>{props.unit}</IonLabel>
                 <IonLabel style={{paddingLeft: "20px", maxWidth: "none", flexGrow: 1}}>{props.infoLabel}</IonLabel>
-                <IonButton onClick={props.submit}>remove</IonButton>
+                <IonButton style={{width: "40px", height: "40px"}} fill={"clear"} onClick={props.submit}>
+                    <IonImg style={{width: "40px", height: "100%"}} src={"assets/img/x-8x.png"} />
+                </IonButton>
             </IonItem>
         </IonItem>
     );

@@ -18,11 +18,11 @@ const EBSettingsDoubleTextInput: React.FC<TextInputProps> = (props) => {
 
     return (
         <IonItem lines="none" class={"ion-no-padding"}>
-            <IonLabel className="ion-text-wrap" style={{maxWidth: "220px", width: "220px"}}>{props.label + ":"}</IonLabel>
+            <IonLabel className="ion-text-wrap" style={{maxWidth: "220px", width: "220px", flexShrink: 0}}>{props.label + ":"}</IonLabel>
             <IonItem style={{flexGrow: 1}} class={"ion-no-padding"}>
                 <IonInput placeholder={props.placeholder1} type={props.type1} onIonChange={props.onChange1}/>
                 <IonInput placeholder={props.placeholder2} type={props.type2} onIonChange={props.onChange2}/>
-                <IonButton onClick={props.submit}>{props.submitText}</IonButton>
+                <IonButton style={{fontSize: "16px"}} onClick={props.submit}>{props.submitText}</IonButton>
             </IonItem>
         </IonItem>
     );

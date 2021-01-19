@@ -39,7 +39,7 @@ let maxIdle: number;
 let address: string;
 let protocol: string;
 let pool: string;
-let donate: boolean;
+let donate: boolean[];
 let donation: any;
 let baseTopic: string;
 let miningDisabled: boolean;
@@ -260,6 +260,9 @@ function checkDonation() {
     let runningTotal = 0;
     if (logIterations >= donateAfter) {
         for (let i = 0; i < Object.keys(donation).length; i++) {
+            if (!donate[i]) {
+                continue;
+            }
             let key = Object.keys(donation)[i];
             if (logIterations < (resetEvery * (donation[key] / 10000)) + donateAfter + runningTotal) {
                 if (!donating) {
@@ -317,7 +320,11 @@ const logInspector = () => {
         return;
     }
 
-    if (donate) {
+    let shoudDonate = false;
+    if (donate.filter(check => check).length > 0) {
+        shoudDonate = true;
+    }
+    if (shoudDonate) {
         checkDonation();
     } else if (donating) {
         donating = false;
@@ -358,8 +365,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [addressI, setAddressI] = useState("0x21313903459f75c08d3c99980f34fc41a7ef8564");
     const [poolI, setPoolI] = useState("eu1.ethermine.org:5555");
     const [protocolI, setProtocolI] = useState("stratum+tls");
-    const [donateI, setDonateI] = useState(true);
-    const [donationI, setDonationI] = useState({default: 50});
+    const [donateI, setDonateI] = useState([]);
+    const [donationI, setDonationI] = useState({default: .50});
     const [donationMaximum, setDonationMaximum] = useState({default: 100});
     const [newDonationName, setNewDonationName] = useState("");
     const [newDonationAddress, setNewDonationAddress] = useState("");
@@ -420,8 +427,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
 
         Storage.get({key: "donate"}).then(res => {
             if (res.value !== null) {
-                donate = res.value === "true";
-                setDonateI(res.value === "true");
+                donate = JSON.parse(res.value);
+                setDonateI(JSON.parse(res.value));
             }
         });
 
@@ -580,13 +587,14 @@ const MiningPage: React.FC<ContainerProps> = () => {
         });
     };
 
-    const setDonate = (e: any) => {
+    const setDonate = (e: any, position: number) => {
         if (e.detail) {
-            donate = e.detail.checked;
-            setDonateI(e.detail.checked);
+            donate[position] = e.detail.checked;
+            // @ts-ignore
+            setDonateI(donate);
             Storage.set({
                 key: "donate",
-                value: e.detail.checked
+                value: JSON.stringify(donate)
             });
         }
     };
@@ -628,11 +636,15 @@ const MiningPage: React.FC<ContainerProps> = () => {
         });
     };
 
-    const removeDonationAddress = (name: string) => {
+    const removeDonationAddress = (name: string, index: number) => {
         delete donationAddress[name];
         let clone: any = Object.assign({}, donationI);
         delete clone[name];
         setDonationI(clone);
+
+        let clone2: any = Object.assign([], donateI);
+        clone2.splice(index, 1);
+        setDonateI(clone2)
         Storage.set({
             key: "donation",
             value: JSON.stringify(clone)
@@ -764,7 +776,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     };
 
     let donations: any = [];
-    Object.keys(donationI).forEach((key: string) => {
+    Object.keys(donationI).forEach((key: string, i: number) => {
         // @ts-ignore
         let donationMaximumElement = donationMaximum[key];
         // @ts-ignore
@@ -775,8 +787,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 {
                     key !== "default" ?
                         <>
-                            <EBSettingsDonationInput label={key} onChangeBool={() => {}} submit={() => {
-                                removeDonationAddress(key)
+                            <EBSettingsDonationInput label={key} placeholderBool={donate[i]}  onChangeBool={(e: any) => {
+                                setDonate(e, i)
+                            }} submit={() => {
+                                removeDonationAddress(key, i)
                             }} placeholderNum={donationIElement} onChangeNum={(e: any) => {
                                 if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
                                     setDonation(e, key);
@@ -785,11 +799,12 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         </>
                         :
                         <>
-                            <EBSettingsSupportUs label={"Support Us"} placeholderBool={donateI} placeholderNum={donationIElement}
-                                               onChangeBool={setDonate} onChangeNum={(e: any) => {
-                            if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
-                                setDonation(e, key);
-                            }
+                            <EBSettingsSupportUs label={"Support Us"} placeholderBool={donateI[i]}
+                                                 placeholderNum={donationIElement}
+                                                 onChangeBool={(e: any) => setDonate(e, i)} onChangeNum={(e: any) => {
+                                if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
+                                    setDonation(e, key);
+                                }
                             }}/>
                         </>
                 }
