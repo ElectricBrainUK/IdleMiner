@@ -244,6 +244,7 @@ let logIterations = 0;
 const donateAfter = 1;
 const resetEvery = 4320;
 let donating = false;
+let donatingTo = "";
 let donationAddress: any = {
     default: "0x21313903459f75c08d3c99980f34fc41a7ef8564"
 };
@@ -260,7 +261,8 @@ function checkDonation() {
             }
             let key = Object.keys(donation)[i];
             if (logIterations < (resetEvery * (donation[key] / 100)) + donateAfter + runningTotal) {
-                if (!donating) {
+                if (!donating || donatingTo !== key) {
+                    donatingTo = key;
                     donating = true;
                     console.log("Mining to donation address " + key);
                     mine(donationAddress[key]);
@@ -559,7 +561,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
     }, []);
 
     const setPage = (i: number) => {
-        console.log(i);
         setOnPage(i);
     };
     const setDir = (e: any) => {
