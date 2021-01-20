@@ -918,6 +918,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         <IonCard>
                             <IonCardTitle>
                                 MQTT
+                                <div style={{display: "inline-block", width: "700px", flexShrink: 1}}/>
+                                <IonButton style={{fontSize: "16px"}} onClick={sendSwitchDetails}>Refresh MQTT</IonButton>
                             </IonCardTitle>
                             <IonCardContent>
                                 <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt}
@@ -935,7 +937,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 <EBSettingsTextInput label={"Username"} placeholder={mqttUsername}
                                                      onChange={setMQTTUsername}/>
                                 <EBSettingsTextInput label={"Password"} type="password" onChange={setMQTTPassword}/>
-                                <IonButton onClick={sendSwitchDetails}>Refresh MQTT</IonButton>
+
                             </IonCardContent>
                         </IonCard>
                     </div>
