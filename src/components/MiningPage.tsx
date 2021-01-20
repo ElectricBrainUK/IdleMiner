@@ -849,7 +849,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
     let logDisplay: any = [];
     logs.slice(viewFullLog ? 0 : Math.max(logs.length - 10, 0)).forEach((logLine: string) => {
         logDisplay.push(
-            <EBSettingsInfo label={logLine.substring(logLine.indexOf(" ") + 1)}/>
+            <EBSettingsInfo label={logLine}/>
         );
     });
 
