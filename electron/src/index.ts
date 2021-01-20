@@ -24,10 +24,10 @@ const check = () => {
     let mainWindow = myCapacitorApp.getMainWindow();
     if (mainWindow !== null) {
         mainWindow.setMenuBarVisibility(false);
-        mainWindow.webContents.openDevTools();
         mainWindow.webContents.on("devtools-opened", () => {
             myCapacitorApp.getMainWindow().webContents.closeDevTools();
         });
+        mainWindow.webContents.openDevTools();
     } else {
         setTimeout(check, 500);
     }
