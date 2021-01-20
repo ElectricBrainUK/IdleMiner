@@ -28,4 +28,5 @@ It allows you to add a bit of intelligence to your mining.
 
 # Screens
 
+![dashboard](https://github.com/ElectricBrainUK/IdleMiner/blob/master/Screens/dashboard.PNG?raw=true)
 
