@@ -18,6 +18,8 @@ It allows you to add a bit of intelligence to your mining.
 **Donation** - this allows you to donate mining time to particular addresses, ours (0x21313903459f75c08d3c99980f34fc41a7ef8564) is **included by default at 0.5%** but you can of course disbale or change the donation amount. You can then add other addresses, like Andrea Lanfranchi one of the main developers of ethminer (0xa7e593bde6b5900262cf94e4d75fb040f7ff4727) and choose a percentage of your mining time to donate, there are many great causes you can donate your mining power to. If you're not into this then that is no problem, donation can be disabled all together. 
 
 # Set Up
+- Download the latest from our releases: https://github.com/ElectricBrainUK/IdleMiner/releases 
+- If you havent already download mining software: https://github.com/ethereum-mining/ethminer/releases
 - You must enter the path of your mining software in the settings (e.g. C:/User/Will/Desktop/ethminer.exe) under software path. 
 - You should then enter your Ethereum address under address. 
 - Under Pool you add your pool address including the port (e.g. eu1.ethermine.org:5555)
