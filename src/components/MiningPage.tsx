@@ -6,13 +6,9 @@ import {
     IonCard,
     IonCardContent,
     IonCardTitle,
-    IonCol,
     IonContent,
-    IonGrid,
-    IonInput,
     IonItem,
     IonLabel,
-    IonRange,
     IonRow,
     IonToggle
 } from "@ionic/react";
@@ -147,7 +143,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
             }
         });
     } catch (e) {
-        console.log("Faled to connect to mqtt broker: " + e.message);
+        console.log("Failed to connect to mqtt broker: " + e.message);
     }
 };
 
@@ -208,8 +204,10 @@ const killMiner = () => {
     }
     miningProgram.kill();
     const timeNow = new Date();
-    log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
-    setLog(log);
+    if (!log[log.length - 1].includes(" restarting miner")) {
+        log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
+        setLog(log);
+    }
 };
 
 let TEN_MINUTES = 10 * 60 * 1000;
@@ -225,7 +223,6 @@ function checkAndRestartCrashes(split: string[]) {
 
     // @ts-ignore
     if ((currentTime - lastMiningTime) > TEN_MINUTES) {
-        console.log(log);
         console.log("Idle for more than 10 mins, restarting");
         mine();
     }
@@ -341,6 +338,16 @@ const logInspector = () => {
     let i = log.length - 1;
     let logLine = log[i];
     let split = logLine.split(' ');
+
+    while (!split && i > 0) {
+        i--;
+        logLine = log[i];
+        split = logLine.split(' ');
+    }
+
+    if (!split) {
+        return;
+    }
 
     checkAndRestartCrashes(split);
 
@@ -775,7 +782,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 {
                     key !== "default" ?
                         <>
-                            <EBSettingsDonationInput label={key} onChangeBool={() => {}} submit={() => {
+                            <EBSettingsDonationInput label={key} onChangeBool={() => {
+                            }} submit={() => {
                                 removeDonationAddress(key)
                             }} placeholderNum={donationIElement} onChangeNum={(e: any) => {
                                 if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
@@ -785,11 +793,12 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         </>
                         :
                         <>
-                            <EBSettingsSupportUs label={"Support Us"} placeholderBool={donateI} placeholderNum={donationIElement}
-                                               onChangeBool={setDonate} onChangeNum={(e: any) => {
-                            if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
-                                setDonation(e, key);
-                            }
+                            <EBSettingsSupportUs label={"Support Us"} placeholderBool={donateI}
+                                                 placeholderNum={donationIElement}
+                                                 onChangeBool={setDonate} onChangeNum={(e: any) => {
+                                if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
+                                    setDonation(e, key);
+                                }
                             }}/>
                         </>
                 }
