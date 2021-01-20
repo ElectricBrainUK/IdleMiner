@@ -8,7 +8,8 @@ import {
     IonCardTitle,
     IonContent,
     IonItem,
-    IonLabel, IonPage,
+    IonLabel,
+    IonPage,
     IonRow,
     IonToggle
 } from "@ionic/react";
@@ -22,8 +23,6 @@ import EBHeader from "./EB-Header";
 import EBSettingsInfo from "./EB-Settings-Info";
 
 const {Storage} = Plugins;
-
-let iter = 0;
 
 let child: any;
 let electron: any;
@@ -149,7 +148,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
             }
         });
     } catch (e) {
-        console.log("Faled to connect to mqtt broker: " + e.message);
+        console.log("Failed to connect to mqtt broker: " + e.message);
     }
 };
 
@@ -165,7 +164,6 @@ const appendToLog = (data: string) => {
             log.push(line);
         }
     });
-    iter++;
     setLog(Object.assign([], log));
 };
 
@@ -212,8 +210,10 @@ const killMiner = () => {
     hashRate = "0";
     setHashRate("0");
     const timeNow = new Date();
-    log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
-    setLog(log);
+    if (!log[log.length - 1].includes(" stopping miner")) {
+        log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " stopping miner");
+        setLog(Object.assign([], log));
+    }
 };
 
 let TEN_MINUTES = 10 * 60 * 1000;
@@ -229,7 +229,6 @@ function checkAndRestartCrashes(split: string[]) {
 
     // @ts-ignore
     if ((currentTime - lastMiningTime) > TEN_MINUTES) {
-        console.log(log);
         console.log("Idle for more than 10 mins, restarting");
         mine();
     }
@@ -355,6 +354,16 @@ const logInspector = () => {
     let i = log.length - 1;
     let logLine = log[i];
     let split = logLine.split(' ');
+
+    while (!split && i > 0) {
+        i--;
+        logLine = log[i];
+        split = logLine.split(' ');
+    }
+
+    if (!split) {
+        return;
+    }
 
     checkAndRestartCrashes(split);
 
@@ -776,6 +785,9 @@ const MiningPage: React.FC<ContainerProps> = () => {
         if (e.detail) {
             manuallTriggeredMining = e.detail.checked;
             setMining(e.detail.checked);
+            if(!e.detail.checked){
+                killMiner();
+            }
         }
     }
 
