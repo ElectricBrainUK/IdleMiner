@@ -84,7 +84,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         will: {
             topic: "idleminer/" + hostName,
             payload: JSON.stringify({
-                hashRate: "0 " + (hashRateUnit ? hashRateUnit : "h"),
+                hashRate: "0 " + (hashRateUnit ? hashRateUnit : "H"),
                 isMining: false
             })
         }
@@ -103,7 +103,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
                 if (!err) {
                     sendSwitchDetails();
                     mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-                        hashRate: (hashRate ? hashRate : "0" + " ") + (hashRateUnit ? hashRateUnit : "h"),
+                        hashRate: (hashRate ? hashRate : "0" + " ") + (hashRateUnit ? hashRateUnit : "H"),
                         isMining
                     }));
 
@@ -343,7 +343,7 @@ const logInspector = () => {
 
     if (mqttClient && mqttClient.connected) {
         mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-            hashRate: hashRate ? hashRate : "0" + " " + hashRateUnit ? hashRateUnit : "h",
+            hashRate: (hashRate ? hashRate : "0" + " ") + (hashRateUnit ? hashRateUnit : "H"),
             isMining
         }));
     }

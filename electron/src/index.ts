@@ -24,10 +24,9 @@ const check = () => {
     let mainWindow = myCapacitorApp.getMainWindow();
     if (mainWindow !== null) {
         mainWindow.setMenuBarVisibility(false);
-        mainWindow.webContents.on("devtools-opened", () => {
-            myCapacitorApp.getMainWindow().webContents.closeDevTools();
-        });
-        mainWindow.webContents.openDevTools();
+        // mainWindow.webContents.on("devtools-opened", () => {
+        //     myCapacitorApp.getMainWindow().webContents.closeDevTools();
+        // });
     } else {
         setTimeout(check, 500);
     }
