@@ -209,6 +209,12 @@ const killMiner = () => {
         log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " stopping miner");
         setLog(Object.assign([], log));
     }
+    if (mqttClient && mqttClient.connected) {
+        mqttClient.publish("idleminer/" + hostName, JSON.stringify({
+            hashRate: "0 MH",
+            isMining
+        }));
+    }
 };
 
 let TEN_MINUTES = 10 * 60 * 1000;
@@ -849,7 +855,10 @@ const MiningPage: React.FC<ContainerProps> = () => {
         let mqttOtherHost = mqttOtherHosts[hostName];
         others.push(
             <EBSettingsBooleanInput label={hostName} placeholder={mqttOtherHost.isMining} onChange={(e: any) => {
-                mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked))
+                mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked));
+                let temp: any = Object.assign({}, mqttOtherHosts);
+                temp[hostName].isMining = e.detail.checked;
+                setOtherHosts(temp);
             }} secondaryLabel={mqttOtherHost.hashRate + "/s"}/>
         )
     });
