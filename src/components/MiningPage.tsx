@@ -241,7 +241,7 @@ const getMiningDetails = (split: string[], logLine: string, i: number) => {
 };
 
 let logIterations = 0;
-const donateAfter = 1;
+const donateAfter = 180;
 const resetEvery = 4320;
 let donating = false;
 let donatingTo = "";
