@@ -2,7 +2,7 @@ import {IonInput, IonItem, IonLabel} from '@ionic/react';
 import React from 'react';
 
 interface InfoProps {
-    label: string
+    label?: string
 }
 
 const EBSettingsInfo: React.FC<InfoProps> = (props) => {

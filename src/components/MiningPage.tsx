@@ -248,8 +248,8 @@ const getMiningDetails = (split: string[], logLine: string, i: number) => {
     setHashRate(split[6]);
     hashRate = split[6];
 
-    setHashRateUnit(split[6]);
-    hashRateUnit = split[6];
+    setHashRateUnit(split[7]);
+    hashRateUnit = split[7];
 };
 
 let logIterations = 0;
@@ -858,9 +858,9 @@ const MiningPage: React.FC<ContainerProps> = () => {
         )
     });
     let logDisplay: any = [];
-    logs.slice(viewFullLog ? 0 : Math.max(logs.length - 10, 0)).forEach(logLine => {
+    logs.slice(viewFullLog ? 0 : Math.max(logs.length - 10, 0)).forEach((logLine: string) => {
         logDisplay.push(
-            <EBSettingsInfo label={logLine}/>
+            <EBSettingsInfo label={logLine.substring(logLine.indexOf(" ") + 1)}/>
         );
     });
 
