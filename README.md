@@ -22,3 +22,4 @@ Donation - this allows you to donate mining time to particular addresses, ours (
 - You should then enter your Ethereum address under address. 
 - Under Pool you add your pool address including the port (e.g. eu1.ethermine.org:5555)
 - Add the protocol under the protocol section (e.g. stratum+tls)
+- Choose whether or not to support us via donation
