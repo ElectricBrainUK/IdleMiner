@@ -204,8 +204,8 @@ const killMiner = () => {
     }
     miningProgram.kill();
     const timeNow = new Date();
-    if (!log[log.length - 1].includes(" restarting miner")) {
-        log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " restarting miner");
+    if (!log[log.length - 1].includes(" stopping miner")) {
+        log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " stopping miner");
         setLog(log);
     }
 };
