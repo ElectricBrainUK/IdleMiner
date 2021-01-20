@@ -84,7 +84,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         will: {
             topic: "idleminer/" + hostName,
             payload: JSON.stringify({
-                hashRate: "0 " + (hashRateUnit ? hashRateUnit : "H"),
+                hashRate: "0 " + (hashRateUnit ? hashRateUnit : "h"),
                 isMining: false
             })
         }
@@ -103,7 +103,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
                 if (!err) {
                     sendSwitchDetails();
                     mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-                        hashRate: (hashRate ? hashRate : "0" + " ") + (hashRateUnit ? hashRateUnit : "H"),
+                        hashRate: (hashRate ? hashRate : "0") + " " + (hashRateUnit ? hashRateUnit : "h"),
                         isMining
                     }));
 
@@ -343,7 +343,7 @@ const logInspector = () => {
 
     if (mqttClient && mqttClient.connected) {
         mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-            hashRate: (hashRate ? hashRate : "0" + " ") + (hashRateUnit ? hashRateUnit : "H"),
+            hashRate: (hashRate ? hashRate : "0") + " " + (hashRateUnit ? hashRateUnit : "h"),
             isMining
         }));
     }
@@ -850,7 +850,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
         others.push(
             <EBSettingsBooleanInput label={hostName} placeholder={mqttOtherHost.isMining} onChange={(e: any) => {
                 mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked))
-            }} secondaryLabel={mqttOtherHost.hashRate}/>
+            }} secondaryLabel={mqttOtherHost.hashRate + "/s"}/>
         )
     });
     let logDisplay: any = [];
