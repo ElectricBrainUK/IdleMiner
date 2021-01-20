@@ -9,7 +9,7 @@ It allows you to add a bit of intelligence to your mining.
 **MQTT** - The software will connect to an mqtt broker if you specify the connection details, this enables several features:
 - Auto discovery and control of other miners connected to the same broker. Control all of your miners from any of your miners
 - Control of miners via mqtt simply send an mqtt message to /idleminer/hostname/mine with the payload of true or false to start or stop mining. Where hostname is the hostname of the miner you would like to control
-- Home Assistant integration - allows the miner to be monitored or controlled in homeassistant, if you set the base topic to the autodiscovery topic of your home assistant instance with autodiscovery enabled it will automatically create a switch to control the miner. If you fill in the base topic after the other mqtt details you may need to restart the mining software to see this entity created. 
+- Home Assistant integration - allows the miner to be monitored or controlled in homeassistant, if you set the base topic to the autodiscovery topic of your home assistant instance with autodiscovery enabled it will automatically create a switch to control the miner. 
 
 **Start on Boot** - An option to start the software with the boot of the operating system means that even if the host crashes mining can resume automatically 
 

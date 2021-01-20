@@ -752,7 +752,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 key: "mqttBaseTopic",
                 value: JSON.stringify(e.detail.value)
             });
-            sendSwitchDetails();
         }
     };
 
@@ -936,6 +935,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 <EBSettingsTextInput label={"Username"} placeholder={mqttUsername}
                                                      onChange={setMQTTUsername}/>
                                 <EBSettingsTextInput label={"Password"} type="password" onChange={setMQTTPassword}/>
+                                <IonButton onClick={sendSwitchDetails}>Refresh MQTT</IonButton>
                             </IonCardContent>
                         </IonCard>
                     </div>
