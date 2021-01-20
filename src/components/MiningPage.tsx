@@ -656,7 +656,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
 
     const addDonationAddress = (name: string, address: string) => {
         donationAddress[name] = address;
-        setDonation({detail: {value: 50}}, name);
+        setDonation({detail: {value: .5}}, name);
         Storage.set({
             key: "addresses",
             value: JSON.stringify(donationAddress)
