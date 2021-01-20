@@ -1,6 +1,5 @@
-import {IonButton, IonInput, IonItem, IonLabel, IonToggle} from '@ionic/react';
+import {IonInput, IonItem, IonLabel, IonToggle} from '@ionic/react';
 import React from 'react';
-import {Simulate} from "react-dom/test-utils";
 
 interface TextInputProps {
     label: string,

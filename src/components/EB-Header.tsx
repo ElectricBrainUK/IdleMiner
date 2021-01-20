@@ -1,4 +1,4 @@
-import {IonButton, IonHeader, IonImg, IonItem, IonLabel, IonToolbar} from '@ionic/react';
+import {IonButton, IonHeader, IonImg, IonLabel, IonToolbar} from '@ionic/react';
 import React from 'react';
 import './EB-Header.css';
 
