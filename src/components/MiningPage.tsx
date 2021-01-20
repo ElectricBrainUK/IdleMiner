@@ -212,7 +212,7 @@ const killMiner = () => {
     if (mqttClient && mqttClient.connected) {
         mqttClient.publish("idleminer/" + hostName, JSON.stringify({
             hashRate: "0 MH",
-            isMining
+            isMining: false
         }));
     }
 };
@@ -777,11 +777,12 @@ const MiningPage: React.FC<ContainerProps> = () => {
         if (e.detail) {
             manuallTriggeredMining = e.detail.checked;
             setMining(e.detail.checked);
+            isMining = e.detail.checked;
             if (!e.detail.checked) {
                 killMiner();
             }
         }
-    }
+    };
 
     const setStartOnBoot = (e: any) => {
         if (e.detail.checked) {
