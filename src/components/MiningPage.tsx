@@ -853,10 +853,23 @@ const MiningPage: React.FC<ContainerProps> = () => {
         );
     });
 
+    const exitApp = () => {
+        if(electron){
+            electron.ipcRenderer.send("closeApp");
+        }
+    }
+
+    const minimiseApp = () => {
+        if(electron){
+            electron.ipcRenderer.send("minimiseApp");
+        }
+    }
+
     return (
         <IonPage>
             <EBHeader mainTitle={"Mine"} onClick={setPage} selected={onPage}
-                      secondaryTitles={["Dashboard", "Settings"]}/>
+                      secondaryTitles={["Dashboard", "Settings"]}
+                      minimise={minimiseApp} exit={exitApp}/>
             <IonContent>
                 <div className={"centre"}>
                     <div className={onPage !== 0 ? enabledCss : disabledCss}>

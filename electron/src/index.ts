@@ -80,3 +80,11 @@ ipcMain.on("isAutoLaunch", (event, args) => {
         }
     });
 });
+
+ipcMain.on("closeApp", (event, args) => {
+    app.quit();
+});
+
+ipcMain.on("minimiseApp", (event, args) => {
+    myCapacitorApp.getMainWindow().minimize();
+});

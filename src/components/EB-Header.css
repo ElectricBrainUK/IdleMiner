@@ -3,6 +3,8 @@
     height: 80px;
     display: flex;
     justify-content: center;
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
 }
 
 .toolbar > * {
@@ -10,6 +12,7 @@
     margin-left: 20px;
     line-height: 40px;
     transition-duration: 200ms;
+    -webkit-app-region: no-drag;
 }
 
 .eb-title{

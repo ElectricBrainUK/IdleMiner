@@ -1,4 +1,4 @@
-import {IonHeader, IonLabel, IonToolbar} from '@ionic/react';
+import {IonButton, IonHeader, IonImg, IonItem, IonLabel, IonToolbar} from '@ionic/react';
 import React from 'react';
 import './EB-Header.css';
 
@@ -6,7 +6,9 @@ interface HeaderProps {
     mainTitle: string,
     secondaryTitles: string[],
     selected?: number,
-    onClick: any
+    onClick: any,
+    minimise?: any,
+    exit?: any
 }
 
 const EBHeader: React.FC<HeaderProps> = (props) => {
@@ -25,6 +27,13 @@ const EBHeader: React.FC<HeaderProps> = (props) => {
                 <IonLabel class="eb-title eb-bold regular-cursor">{props.mainTitle}</IonLabel>
                 <div className="eb-header-divider"/>
                 {options}
+
+                <IonButton slot="secondary" style={{width: "80px", height: "80px"}} fill={"clear"} onClick={props.minimise}>
+                    <div style={{height: 8, width: 35, backgroundColor: "white", marginTop: "30px"}}/>
+                </IonButton>
+                <IonButton slot="secondary" style={{marginLeft: 0, width: "80px", height: "80px"}} fill={"clear"} onClick={props.exit}>
+                    <IonImg style={{width: "40px", height: "80%"}} src={"assets/img/x-8x-white.png"} />
+                </IonButton>
             </IonToolbar>
         </IonHeader>
     );
