@@ -1,10 +1,11 @@
 import {app, ipcMain, ipcRenderer} from "electron";
 import {createCapacitorElectronApp} from "@capacitor-community/electron";
+
 const AutoLaunch = require('auto-launch');
 
 let autoLaunch: any;
 // The MainWindow object can be accessed via myCapacitorApp.getMainWindow()
-const myCapacitorApp = createCapacitorElectronApp();
+const myCapacitorApp = createCapacitorElectronApp({mainWindow: {windowOptions: {frame: false}}});
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some Electron APIs can only be used after this event occurs.
@@ -16,16 +17,17 @@ app.on("ready", () => {
         path: process.env.PORTABLE_EXECUTABLE_FILE,
     });
 
-    // setTimeout(check, 500);
+    setTimeout(check, 500);
 });
 
 const check = () => {
     let mainWindow = myCapacitorApp.getMainWindow();
     if (mainWindow !== null) {
-        mainWindow.webContents.openDevTools();
-        mainWindow.webContents.on("devtools-opened", () => {
-            myCapacitorApp.getMainWindow().webContents.closeDevTools();
-        });
+        mainWindow.setMenuBarVisibility(false);
+        // mainWindow.webContents.openDevTools();
+        // mainWindow.webContents.on("devtools-opened", () => {
+        //     myCapacitorApp.getMainWindow().webContents.closeDevTools();
+        // });
     } else {
         setTimeout(check, 500);
     }
