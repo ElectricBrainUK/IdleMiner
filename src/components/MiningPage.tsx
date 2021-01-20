@@ -53,6 +53,27 @@ if (window && window.require) {
 
 let mqttClient: any;
 
+const sendSwitchDetails = () => {
+    if (mqttClient && mqttClient.connected) {
+        mqttClient.publish(baseTopic + "/switch/" + hostName + "/config", JSON.stringify({
+            "payload_on": true,
+            "payload_off": false,
+            "json_attributes_topic": "idleminer/" + hostName,
+            "value_template": "{{ value_json.isMining }}",
+            "state_topic": "idleminer/" + hostName,
+            "name": hostName,
+            "unique_id": hostName,
+            "device": {
+                "name": hostName,
+                "identifiers": [hostName],
+                "manufacturer": "Electric Brain",
+                "model": "Miner"
+            },
+            "command_topic": "idleminer/" + hostName + "/mine"
+        }));
+    }
+};
+
 const connectToMqtt = (protocol: string, broker: string, username: string, password: string, port: string, selfSigned: boolean) => {
     const options: any = {
         username: username,
@@ -80,22 +101,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         mqttClient.on('connect', () => {
             mqttClient.subscribe('idleminer/#', (err: any) => {
                 if (!err) {
-                    mqttClient.publish(baseTopic + "/switch/" + hostName + "/config", JSON.stringify({
-                        "payload_on": true,
-                        "payload_off": false,
-                        "json_attributes_topic": "idleminer/" + hostName,
-                        "value_template": "{{ value_json.isMining }}",
-                        "state_topic": "idleminer/" + hostName,
-                        "name": hostName,
-                        "unique_id": hostName,
-                        "device": {
-                            "name": hostName,
-                            "identifiers": [hostName],
-                            "manufacturer": "Electric Brain",
-                            "model": "Miner"
-                        },
-                        "command_topic": "idleminer/" + hostName + "/mine"
-                    }));
+                    sendSwitchDetails();
                     mqttClient.publish("idleminer/" + hostName, JSON.stringify({
                         hashRate: hashRate + " " + hashRateUnit,
                         isMining
@@ -746,6 +752,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 key: "mqttBaseTopic",
                 value: JSON.stringify(e.detail.value)
             });
+            sendSwitchDetails();
         }
     };
 
@@ -765,7 +772,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
         if (e.detail) {
             manuallTriggeredMining = e.detail.checked;
             setMining(e.detail.checked);
-            if(!e.detail.checked){
+            if (!e.detail.checked) {
                 killMiner();
             }
         }
@@ -855,13 +862,13 @@ const MiningPage: React.FC<ContainerProps> = () => {
     });
 
     const exitApp = () => {
-        if(electron){
+        if (electron) {
             electron.ipcRenderer.send("closeApp");
         }
     }
 
     const minimiseApp = () => {
-        if(electron){
+        if (electron) {
             electron.ipcRenderer.send("minimiseApp");
         }
     }
@@ -971,11 +978,11 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         <IonCard>
                             <IonCardTitle>
                                 Log
-                                <div style={{display: "inline-block", width:"600px", flexGrow: 1}}/>
+                                <div style={{display: "inline-block", width: "600px", flexGrow: 1}}/>
                                 <IonButton style={{fontSize: "16px"}} onClick={() => {
                                     setViewFullLog(!viewFullLog)
                                 }}>
-                                    {viewFullLog ?  "Hide" : "Show Full Log"}
+                                    {viewFullLog ? "Hide" : "Show Full Log"}
                                 </IonButton>
                             </IonCardTitle>
                             <IonCardContent>
