@@ -324,7 +324,7 @@ const logInspector = () => {
     }
 
     let shoudDonate = false;
-    if (donate.filter(check => check).length > 0) {
+    if (donate && donate.filter(check => check).length > 0) {
         shoudDonate = true;
     }
     if (shoudDonate) {
