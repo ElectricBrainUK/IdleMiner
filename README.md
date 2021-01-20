@@ -25,3 +25,7 @@ It allows you to add a bit of intelligence to your mining.
 - Under Pool you add your pool address including the port (e.g. eu1.ethermine.org:5555)
 - Add the protocol under the protocol section (e.g. stratum+tls)
 - Choose whether or not to support us via donation
+
+# Screens
+
+
