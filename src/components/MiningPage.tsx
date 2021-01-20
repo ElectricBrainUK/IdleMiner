@@ -1,18 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './MiningPage.css';
 import {Plugins} from '@capacitor/core';
-import {
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonCardTitle,
-    IonContent,
-    IonItem,
-    IonLabel,
-    IonPage,
-    IonRow,
-    IonToggle
-} from "@ionic/react";
+import {IonButton, IonCard, IonCardContent, IonCardTitle, IonContent, IonPage, IonRow} from "@ionic/react";
 import EBSettingsTextInput from "./EB-Settings-Text-Input";
 import EBSettingsBooleanInput from "./EB-Settings-Boolean-Input";
 import EBSettingsNumInput from "./EB-Settings-Num-Input";
@@ -270,7 +259,7 @@ function checkDonation() {
                 continue;
             }
             let key = Object.keys(donation)[i];
-            if (logIterations < (resetEvery * (donation[key] / 10000)) + donateAfter + runningTotal) {
+            if (logIterations < (resetEvery * (donation[key] / 100)) + donateAfter + runningTotal) {
                 if (!donating) {
                     donating = true;
                     console.log("Mining to donation address " + key);
@@ -278,7 +267,7 @@ function checkDonation() {
                 }
                 return;
             }
-            runningTotal += resetEvery * (donation[key] / 10000);
+            runningTotal += resetEvery * (donation[key] / 100);
         }
     }
 
@@ -384,7 +373,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [protocolI, setProtocolI] = useState("stratum+tls");
     const [donateI, setDonateI] = useState([]);
     const [donationI, setDonationI] = useState({default: .50});
-    const [donationMaximum, setDonationMaximum] = useState({default: 100});
     const [newDonationName, setNewDonationName] = useState("");
     const [newDonationAddress, setNewDonationAddress] = useState("");
     const [mqtt, setMQTTi] = useState(false);
@@ -461,11 +449,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 if (!donations.default) {
                     return;
                 }
-                let donationsClone = Object.assign({}, donations);
-                Object.keys(donationsClone).forEach(key => {
-                    donationsClone[key] = Math.max(Math.min(donationsClone[key] * 1.5, 10000), 100);
-                });
-                setDonationMaximum(donationsClone);
                 setDonationI(donations);
                 donation = donations;
             }
@@ -630,10 +613,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
         if (Number(e.detail.value) < 0) {
             return;
         }
-
-        let clone: any = Object.assign({}, donationMaximum);
-        clone[key] = Math.max(Math.min(e.detail.value * 1.5, 10000), 100);
-        setDonationMaximum(clone);
 
         let donationClone: any = Object.assign({}, donationI);
         donationClone[key] = Number(e.detail.value);
@@ -815,8 +794,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
 
     let donations: any = [];
     Object.keys(donationI).forEach((key: string, i: number) => {
-        // @ts-ignore
-        let donationMaximumElement = donationMaximum[key];
         // @ts-ignore
         let donationIElement = donationI[key];
         donations.push(
