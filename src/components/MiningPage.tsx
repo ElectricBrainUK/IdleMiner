@@ -1,7 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import './MiningPage.css';
 import {Plugins} from '@capacitor/core';
-import {IonButton, IonCard, IonCardContent, IonCardTitle, IonContent, IonPage, IonRow} from "@ionic/react";
+import {
+    getPlatforms,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardTitle,
+    IonContent,
+    IonPage,
+    IonRow
+} from "@ionic/react";
 import EBSettingsTextInput from "./EB-Settings-Text-Input";
 import EBSettingsBooleanInput from "./EB-Settings-Boolean-Input";
 import EBSettingsNumInput from "./EB-Settings-Num-Input";
@@ -38,6 +47,7 @@ let setOthers: any;
 let hostName = "";
 let manuallTriggeredMining = false;
 let mineIdle: boolean;
+const platforms = getPlatforms();
 
 let os: any;
 let mqttModule: any;
@@ -49,6 +59,8 @@ if (window && window.require) {
     mqttModule = window.require('mqtt');
     let string = "" + os.hostname;
     hostName = string.split('.')[0];
+} else {
+    mqttModule = require('mqtt');
 }
 
 let mqttClient: any;
@@ -96,9 +108,14 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
     }
 
     try {
-        mqttClient = mqttModule.connect(protocol + broker, options);
+        let protocolTemp = protocol;
+        if (platforms.includes("desktop") && !platforms.includes("electron")) {
+            protocolTemp = protocolTemp.replace("mqtt", "ws"); //todo if web tell they need to use ws
+        }
+        mqttClient = mqttModule.connect(protocolTemp + broker, options);
 
         mqttClient.on('connect', () => {
+            console.log("connected");
             mqttClient.subscribe('idleminer/#', (err: any) => {
                 if (!err) {
                     sendSwitchDetails();
@@ -113,6 +130,7 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         });
 
         mqttClient.on("message", (topic: string, message: any) => {
+            console.log(topic, message);
             let topicParts = topic.split('/');
             if (topicParts[0] === "idleminer" && topicParts[1] !== hostName && topicParts.length === 2) {
                 otherHosts[topicParts[1]] = JSON.parse(message.toString());
@@ -195,8 +213,8 @@ const killMiner = () => {
     console.log("Stopping mining");
     try {
         psTree(miningProgram.pid, (err: any, children: any) => {
-            children.map((p: any) => {
-                process.kill(p.PID);
+            return children.map((p: any) => {
+                return process.kill(p.PID);
             });
         });
     } catch (e) {
@@ -880,7 +898,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
         if (electron) {
             electron.ipcRenderer.send("minimiseApp");
         }
-    }
+    };
 
     return (
         <IonPage>
@@ -929,7 +947,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
                             <IonCardTitle>
                                 MQTT
                                 <div style={{display: "inline-block", width: "700px", flexShrink: 1}}/>
-                                <IonButton style={{fontSize: "16px"}} onClick={sendSwitchDetails}>Refresh MQTT</IonButton>
+                                <IonButton style={{fontSize: "16px"}} onClick={sendSwitchDetails}>Refresh
+                                    MQTT</IonButton>
                             </IonCardTitle>
                             <IonCardContent>
                                 <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt}
