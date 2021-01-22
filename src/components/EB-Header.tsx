@@ -50,6 +50,6 @@ const EBHeader: React.FC<HeaderProps> = (props) => {
 
 EBHeader.defaultProps = {
     selected: 0
-}
+};
 
 export default EBHeader;

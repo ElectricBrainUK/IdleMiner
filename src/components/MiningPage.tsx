@@ -440,13 +440,23 @@ const MiningPage: React.FC<ContainerProps> = () => {
     donate = donateI;
     donation = donationI;
     baseTopic = mqttBaseTopic;
-    setOthers = setOtherHosts;
+    setOthers = (hosts: any) => {
+        setOtherHosts(hosts);
+        Storage.set({key: "knownHosts", value: JSON.stringify(hosts)});
+    };
     mineIdle = mineIdleI;
 
     useEffect(() => {
         Storage.get({key: "dir"}).then(res => {
             if (res.value !== null) {
                 setDirectory(res.value);
+            }
+        });
+
+        Storage.get({key: "knownHosts"}).then(res => {
+            if (res.value !== null) {
+                setOtherHosts(JSON.parse(res.value));
+                otherHosts = JSON.parse(res.value);
             }
         });
 
