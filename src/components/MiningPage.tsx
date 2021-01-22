@@ -48,6 +48,7 @@ let hostName = "";
 let manuallTriggeredMining = false;
 let mineIdle: boolean;
 const platforms = getPlatforms();
+const webBrowser = platforms.includes("desktop") && !platforms.includes("electron");
 
 let os: any;
 let mqttModule: any;
@@ -66,7 +67,7 @@ if (window && window.require) {
 let mqttClient: any;
 
 const sendSwitchDetails = () => {
-    if (mqttClient && mqttClient.connected) {
+    if (mqttClient && mqttClient.connected && !webBrowser) {
         mqttClient.publish(baseTopic + "/switch/" + hostName + "/config", JSON.stringify({
             "payload_on": true,
             "payload_off": false,
@@ -93,15 +94,17 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         port: port,
         host: broker,
         rejectUnauthorized: !selfSigned,
-        will: {
+    };
+
+    if (!webBrowser) {
+        options.will = {
             topic: "idleminer/" + hostName,
             payload: JSON.stringify({
                 hashRate: "0 " + (hashRateUnit ? hashRateUnit : "h"),
                 isMining: false
             })
-        }
-    };
-
+        };
+    }
 
     if (!mqttModule) {
         return;
@@ -109,20 +112,21 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
 
     try {
         let protocolTemp = protocol;
-        if (platforms.includes("desktop") && !platforms.includes("electron")) {
-            protocolTemp = protocolTemp.replace("mqtt", "ws"); //todo if web tell they need to use ws
+        if (webBrowser) {
+            protocolTemp = protocolTemp.replace("mqtt", "ws");
         }
         mqttClient = mqttModule.connect(protocolTemp + broker, options);
 
         mqttClient.on('connect', () => {
-            console.log("connected");
             mqttClient.subscribe('idleminer/#', (err: any) => {
                 if (!err) {
-                    sendSwitchDetails();
-                    mqttClient.publish("idleminer/" + hostName, JSON.stringify({
-                        hashRate: (hashRate ? hashRate : "0") + " " + (hashRateUnit ? hashRateUnit : "h"),
-                        isMining
-                    }));
+                    if (!webBrowser) {
+                        sendSwitchDetails();
+                        mqttClient.publish("idleminer/" + hostName, JSON.stringify({
+                            hashRate: (hashRate ? hashRate : "0") + " " + (hashRateUnit ? hashRateUnit : "h"),
+                            isMining
+                        }));
+                    }
 
                     mqttClient.subscribe("idleminer/" + hostName + "/mine");
                 }
@@ -130,7 +134,6 @@ const connectToMqtt = (protocol: string, broker: string, username: string, passw
         });
 
         mqttClient.on("message", (topic: string, message: any) => {
-            console.log(topic, message);
             let topicParts = topic.split('/');
             if (topicParts[0] === "idleminer" && topicParts[1] !== hostName && topicParts.length === 2) {
                 otherHosts[topicParts[1]] = JSON.parse(message.toString());
@@ -227,7 +230,7 @@ const killMiner = () => {
         log.push(" w " + timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds() + " stopping miner");
         setLog(Object.assign([], log));
     }
-    if (mqttClient && mqttClient.connected) {
+    if (mqttClient && mqttClient.connected && !webBrowser) {
         mqttClient.publish("idleminer/" + hostName, JSON.stringify({
             hashRate: "0 MH",
             isMining: false
@@ -314,7 +317,7 @@ let lastIdle = 0;
 
 const logInspector = () => {
     setTimeout(logInspector, 10000);
-    if (miningDisabled) {
+    if (miningDisabled || webBrowser) {
         return;
     }
 
@@ -878,7 +881,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 let temp: any = Object.assign({}, mqttOtherHosts);
                 temp[hostName].isMining = e.detail.checked;
                 setOtherHosts(temp);
-            }} secondaryLabel={mqttOtherHost.hashRate + "/s"}/>
+            }} secondaryLabel={mqttOtherHost.hashRate + "/s"} key={hostName}/>
         )
     });
     let logDisplay: any = [];
@@ -892,7 +895,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
         if (electron) {
             electron.ipcRenderer.send("closeApp");
         }
-    }
+    };
 
     const minimiseApp = () => {
         if (electron) {
@@ -904,11 +907,11 @@ const MiningPage: React.FC<ContainerProps> = () => {
         <IonPage>
             <EBHeader mainTitle={"Mine"} onClick={setPage} selected={onPage}
                       secondaryTitles={["Dashboard", "Settings"]}
-                      minimise={minimiseApp} exit={exitApp}/>
+                      minimise={minimiseApp} exit={exitApp} webBrowser={webBrowser}/>
             <IonContent>
                 <div className={"centre"}>
                     <div className={onPage !== 0 ? enabledCss : disabledCss}>
-                        <IonCard>
+                        <IonCard className={webBrowser ? disabledCss : enabledCss}>
                             <IonCardTitle>
                                 Mining
                             </IonCardTitle>
@@ -922,7 +925,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                                      onChange={setProtocol}/>
                             </IonCardContent>
                         </IonCard>
-                        <IonCard>
+                        <IonCard className={webBrowser ? disabledCss : enabledCss}>
                             <IonCardTitle>
                                 Preferences
                             </IonCardTitle>
@@ -935,7 +938,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                                         onChange={setStartOnBoot}/>
                             </IonCardContent>
                         </IonCard>
-                        <IonCard>
+                        <IonCard className={webBrowser ? disabledCss : enabledCss}>
                             <IonCardTitle>
                                 Donations
                             </IonCardTitle>
@@ -949,6 +952,12 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 <div style={{display: "inline-block", width: "700px", flexShrink: 1}}/>
                                 <IonButton style={{fontSize: "16px"}} onClick={sendSwitchDetails}>Refresh
                                     MQTT</IonButton>
+                                {
+                                    webBrowser ?
+                                        <p>Only websocket protocols and ports are supported in a web browser</p>
+                                        :
+                                        <></>
+                                }
                             </IonCardTitle>
                             <IonCardContent>
                                 <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt}
@@ -978,7 +987,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                         miningDisabled = false;
                                         manuallTriggeredMining = true;
                                         setMining(true);
-                                    }}>
+                                    }} className={webBrowser ? disabledCss : enabledCss}>
                                         Start Mining
                                     </IonButton>
                                     :
@@ -986,7 +995,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                         miningDisabled = false;
                                         manuallTriggeredMining = false;
                                         setMining(false);
-                                    }}>
+                                    }} className={webBrowser ? disabledCss : enabledCss}>
                                         Stop Mining
                                     </IonButton>
                                 }
@@ -996,9 +1005,11 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                         Hosts
                                     </IonCardTitle>
                                     <IonCardContent>
-                                        <EBSettingsBooleanInput label={"This Machine"} placeholder={mining}
-                                                                onChange={setStartMining}
-                                                                secondaryLabel={hashRate + " " + hashRateUnit + "/s"}/>
+                                        {webBrowser ? <></> :
+                                            <EBSettingsBooleanInput label={"This Machine"} placeholder={mining}
+                                                                    onChange={setStartMining}
+                                                                    secondaryLabel={hashRate + " " + hashRateUnit + "/s"}/>
+                                        }
                                         {others}
                                     </IonCardContent>
                                 </IonCard>
@@ -1006,7 +1017,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                             :
                             <></>
                         }
-                        <IonCard>
+                        <IonCard className={webBrowser ? disabledCss : enabledCss}>
                             <IonCardTitle>
                                 Log
                                 <div style={{display: "inline-block", width: "600px", flexGrow: 1}}/>
