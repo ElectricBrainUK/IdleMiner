@@ -1,5 +1,5 @@
 # Idle Miner
-Idle Miner is a wrapper for mining software. Currently only EthMiner (https://github.com/ethereum-mining/ethminer) is supported but support for Claymore and others will come soon. 
+Idle Miner is a wrapper for mining software. Currently only EthMiner (https://github.com/ethereum-mining/ethminer) is supported but support for  others will come soon. 
 
 It allows you to add a bit of intelligence to your mining. 
 
