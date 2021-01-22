@@ -1,0 +1,59 @@
+stages:
+- build
+- test
+- performance
+- dast
+- deploy
+- release
+
+variables:
+  EIGHTY_SIX_TAG: $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:x86-$CI_COMMIT_SHA
+
+build:
+  tags:
+  - machine
+  - x86
+  stage: build
+  script:
+  - docker login -u  $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - docker build -t $EIGHTY_SIX_TAG .
+  - docker push $EIGHTY_SIX_TAG
+
+deploy-dockerhub-beta:
+  tags:
+  - machine
+  stage: deploy
+  only:
+  - master
+  script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - docker pull $EIGHTY_SIX_TAG
+  - docker tag $EIGHTY_SIX_TAG electricbrainuk/idleminerdashboard:beta
+  - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+  - docker push electricbrainuk/idleminerdashboard:beta
+
+deploy-dockerhub:
+  tags:
+  - machine
+  stage: release
+  when: manual
+  only:
+  - master
+  script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - docker pull $EIGHTY_SIX_TAG
+  - docker tag $EIGHTY_SIX_TAG electricbrainuk/idleminerdashboard:latest
+  - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+  - docker push electricbrainuk/idleminerdashboard:latest
+
+
+include:
+- template: Jobs/Code-Quality.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Jobs/Code-Quality.gitlab-ci.yml
+- template: Jobs/Code-Intelligence.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Jobs/Code-Intelligence.gitlab-ci.yml
+- template: Jobs/Browser-Performance-Testing.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Jobs/Browser-Performance-Testing.gitlab-ci.yml
+- template: Security/DAST.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/DAST.gitlab-ci.yml
+- template: Security/Container-Scanning.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/Container-Scanning.gitlab-ci.yml
+- template: Security/Dependency-Scanning.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/Dependency-Scanning.gitlab-ci.yml
+- template: Security/License-Scanning.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/License-Scanning.gitlab-ci.yml
+- template: Security/SAST.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/SAST.gitlab-ci.yml
+- template: Security/Secret-Detection.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/Secret-Detection.gitlab-ci.yml
