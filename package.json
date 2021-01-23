@@ -33,7 +33,7 @@
     "typescript": "3.8.3"
   },
   "scripts": {
-    "dev": "PORT=3001 node storage.js > config/storage.log  & react-scripts start",
+    "dev": "PORT=3001 node storage.js > config/storage.log & react-scripts start",
     "start": "node storage.js > config/storage.log & react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -64,5 +64,6 @@
     "@capacitor/cli": "2.4.5",
     "@ionic/lab": "3.2.10",
     "electron-packager": "^15.2.0"
-  }
+  },
+  "proxy": "http://localhost:12345"
 }

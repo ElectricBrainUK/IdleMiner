@@ -56,7 +56,7 @@ if (webBrowser) {
     Storage = {
         get(options: { key: string }): Promise<{ value: string | null }> {
             return new Promise<{ value: string | null }>(resolve => {
-                return fetch("http://" + host +":12345/" + options.key).then(response => {
+                return fetch("/" + options.key).then(response => {
                     if (response.ok) {
                         response.text().then(text => {
                             if (text === "") {
@@ -77,7 +77,7 @@ if (webBrowser) {
         },
         set(options: { key: string; value: string }): Promise<void> {
             return new Promise<void>(resolve => {
-                return fetch("http://" + host + ":12345/" + options.key, {
+                return fetch("/" + options.key, {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
