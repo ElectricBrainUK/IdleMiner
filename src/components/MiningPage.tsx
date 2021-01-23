@@ -51,11 +51,12 @@ const platforms = getPlatforms();
 const webBrowser = !platforms.includes("electron");
 
 if (webBrowser) {
+    const host = window.location.host.split(":")[0];
     // @ts-ignore
     Storage = {
         get(options: { key: string }): Promise<{ value: string | null }> {
             return new Promise<{ value: string | null }>(resolve => {
-                return fetch("http://localhost:12345/" + options.key).then(response => {
+                return fetch("http://" + host +":12345/" + options.key).then(response => {
                     if (response.ok) {
                         response.text().then(text => {
                             if (text === "") {
@@ -76,7 +77,7 @@ if (webBrowser) {
         },
         set(options: { key: string; value: string }): Promise<void> {
             return new Promise<void>(resolve => {
-                return fetch("http://localhost:12345/" + options.key, {
+                return fetch("http://" + host + ":12345/" + options.key, {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
