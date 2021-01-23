@@ -26,7 +26,7 @@ app.use(function (req, res, next) {
 });
 
 app.get('/:key/:apiKey', (req, res) => {
-    if (req.params.apiKey !== process.env.APIKey) {
+    if (req.params.apiKey !== process.env.REACT_APP_APIKEY) {
         res.send();
         return;
     }
@@ -38,7 +38,7 @@ app.get('/:key/:apiKey', (req, res) => {
 });
 
 app.post('/:key/:apiKey', jsonParser, (req, res) => {
-    if (req.params.apiKey !== process.env.APIKey) {
+    if (req.params.apiKey !== process.env.REACT_APP_APIKEY) {
         res.send();
         return;
     }

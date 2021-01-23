@@ -55,7 +55,7 @@ if (webBrowser) {
     Storage = {
         get(options: { key: string }): Promise<{ value: string | null }> {
             return new Promise<{ value: string | null }>(resolve => {
-                return fetch("/" + options.key + "/" + process.env.APIKey).then(response => {
+                return fetch("/" + options.key + "/" + process.env.REACT_APP_APIKEY).then(response => {
                     if (response.ok) {
                         response.text().then(text => {
                             if (text === "") {
@@ -76,7 +76,7 @@ if (webBrowser) {
         },
         set(options: { key: string; value: string }): Promise<void> {
             return new Promise<void>(resolve => {
-                return fetch("/" + options.key + "/" + process.env.APIKey, {
+                return fetch("/" + options.key + "/" + process.env.REACT_APP_APIKEY, {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
