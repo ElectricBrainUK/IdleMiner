@@ -9,7 +9,7 @@ var jsonParser = bodyParser.json();
 app.use(function (req, res, next) {
 
     // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -27,7 +27,7 @@ app.use(function (req, res, next) {
 
 app.get('/:key', (req, res) => {
     let data = JSON.parse(fs.readFileSync("config/data.json").toString());
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(data[req.params.key] ? data[req.params.key] : null);
 });
 
@@ -37,7 +37,7 @@ app.post('/:key', jsonParser, (req, res) => {
     console.log(data);
     console.log(req.body);
     fs.writeFileSync("config/data.json", JSON.stringify(data));
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send();
 });
 
