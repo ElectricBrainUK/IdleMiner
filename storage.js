@@ -25,19 +25,25 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/:key', (req, res) => {
+app.get('/:key/:apiKey', (req, res) => {
+    if (req.params.apiKey !== process.env.APIKey) {
+        res.send();
+        return;
+    }
     let data = JSON.parse(fs.readFileSync("config/data.json").toString());
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(data[req.params.key] ? data[req.params.key] : null);
 });
 
-app.post('/:key', jsonParser, (req, res) => {
+app.post('/:key/:apiKey', jsonParser, (req, res) => {
+    if (req.params.apiKey !== process.env.APIKey) {
+        res.send();
+        return;
+    }
     let data = JSON.parse(fs.readFileSync("config/data.json").toString());
     data[req.params.key] = req.body.value;
     console.log(data);
     console.log(req.body);
     fs.writeFileSync("config/data.json", JSON.stringify(data));
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send();
 });
 

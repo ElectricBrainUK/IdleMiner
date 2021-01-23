@@ -33,7 +33,7 @@
     "typescript": "3.8.3"
   },
   "scripts": {
-    "dev": "PORT=3001 node storage.js > config/storage.log & react-scripts start",
+    "dev": "node storage.js > config/storage.log & react-scripts start",
     "start": "node storage.js > config/storage.log & react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
