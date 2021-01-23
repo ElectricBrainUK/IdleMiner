@@ -30,6 +30,9 @@ app.get('/:key/:apiKey', (req, res) => {
         res.send();
         return;
     }
+    if (!fs.existsSync("config/data.json")) {
+        fs.writeFileSync("config/data.json", JSON.stringify({}));
+    }
     let data = JSON.parse(fs.readFileSync("config/data.json").toString());
     res.send(data[req.params.key] ? data[req.params.key] : null);
 });
@@ -38,6 +41,9 @@ app.post('/:key/:apiKey', jsonParser, (req, res) => {
     if (req.params.apiKey !== process.env.APIKey) {
         res.send();
         return;
+    }
+    if (!fs.existsSync("config/data.json")) {
+        fs.writeFileSync("config/data.json", JSON.stringify({}));
     }
     let data = JSON.parse(fs.readFileSync("config/data.json").toString());
     data[req.params.key] = req.body.value;
