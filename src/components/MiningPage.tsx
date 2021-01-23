@@ -19,6 +19,7 @@ import EBSettingsDonationInput from "./EB-Settings-Donation-Input";
 import EBSettingsSupportUs from "./EB-Settings-Support-Us";
 import EBHeader from "./EB-Header";
 import EBSettingsInfo from "./EB-Settings-Info";
+import {Link} from "react-router-dom";
 
 let {Storage} = Plugins;
 
@@ -890,7 +891,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                 {
                     key !== "default" ?
                         <>
-                            <EBSettingsDonationInput label={key} placeholderBool={donate[i]} onChangeBool={(e: any) => {
+                            <EBSettingsDonationInput label={key} default={donate[i]} onChangeBool={(e: any) => {
                                 setDonate(e, i)
                             }} submit={() => {
                                 removeDonationAddress(key, i)
@@ -902,7 +903,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                         </>
                         :
                         <>
-                            <EBSettingsSupportUs label={"Support Us"} placeholderBool={donateI[i]}
+                            <EBSettingsSupportUs label={"Support Us"} default={donateI[i]}
                                                  placeholderNum={donationIElement}
                                                  onChangeBool={(e: any) => setDonate(e, i)} onChangeNum={(e: any) => {
                                 if (e && e.detail && e.detail.value && Number(e.detail.value) !== donationIElement) {
@@ -929,7 +930,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
         // @ts-ignore
         let mqttOtherHost = mqttOtherHosts[hostName];
         others.push(
-            <EBSettingsBooleanInput label={hostName} placeholder={mqttOtherHost.isMining} onChange={(e: any) => {
+            <EBSettingsBooleanInput label={hostName} default={mqttOtherHost.isMining} onChange={(e: any) => {
                 mqttClient.publish("idleminer/" + hostName + "/mine", JSON.stringify(e.detail.checked));
                 let temp: any = Object.assign({}, mqttOtherHosts);
                 temp[hostName].isMining = e.detail.checked;
@@ -983,11 +984,11 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 Preferences
                             </IonCardTitle>
                             <IonCardContent>
-                                <EBSettingsBooleanInput label={"Enable Idle Mining"} placeholder={mineIdleI}
+                                <EBSettingsBooleanInput label={"Enable Idle Mining"} default={mineIdleI}
                                                         onChange={setMineIdle}/>
                                 <EBSettingsNumInput label={"Idle Mining Delay"} placeholder={idleMins.toString()}
                                                     onChange={setIdleMinutes} unit={"minutes"} min={"0"}/>
-                                <EBSettingsBooleanInput label={"Start On Boot"} placeholder={autoStart}
+                                <EBSettingsBooleanInput label={"Start On Boot"} default={autoStart}
                                                         onChange={setStartOnBoot}/>
                             </IonCardContent>
                         </IonCard>
@@ -1011,9 +1012,15 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                         :
                                         <></>
                                 }
+                                {
+                                    webBrowser && !mqtt ?
+                                        <p>If you haven't already, download the mining software to control your rigs <a href={"https://github.com/ElectricBrainUK/IdleMiner"} target={"_blank"}>here</a></p>
+                                        :
+                                        <></>
+                                }
                             </IonCardTitle>
                             <IonCardContent>
-                                <EBSettingsBooleanInput label={"Enabled MQTT"} placeholder={mqtt}
+                                <EBSettingsBooleanInput label={"Enabled MQTT"} default={mqtt}
                                                         onChange={setMQTT}/>
                                 <EBSettingsTextInput label={"Protocol"} placeholder={mqttProtocol}
                                                      onChange={setMQTTProtocol}/>
@@ -1024,7 +1031,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 <EBSettingsTextInput label={"Base Topic"} placeholder={mqttBaseTopic}
                                                      onChange={setMQTTBaseTopic}/>
                                 <EBSettingsBooleanInput label={"Self Signed Certificate"}
-                                                        placeholder={mqttSelfSigned} onChange={setMQTTSelfSigned}/>
+                                                        default={mqttSelfSigned} onChange={setMQTTSelfSigned}/>
                                 <EBSettingsTextInput label={"Username"} placeholder={mqttUsername}
                                                      onChange={setMQTTUsername}/>
                                 <EBSettingsTextInput label={"Password"} type="password" onChange={setMQTTPassword}/>
@@ -1059,7 +1066,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                     </IonCardTitle>
                                     <IonCardContent>
                                         {webBrowser ? <></> :
-                                            <EBSettingsBooleanInput label={"This Machine"} placeholder={mining}
+                                            <EBSettingsBooleanInput label={"This Machine"} default={mining}
                                                                     onChange={setStartMining}
                                                                     secondaryLabel={hashRate + " " + hashRateUnit + "/s"}/>
                                         }

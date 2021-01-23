@@ -6,7 +6,7 @@ interface TextInputProps {
     placeholderNum?: string,
     onChangeNum: any,
     unit?: string,
-    placeholderBool?: boolean,
+    default?: boolean,
     onChangeBool: any,
     submit: any,
     infoLabel?: string,
@@ -20,7 +20,7 @@ const EBSettingsDonationInput: React.FC<TextInputProps> = (props) => {
         <IonItem lines="none" class={"ion-no-padding"}>
             <IonLabel className="ion-text-wrap" style={{maxWidth: "220px", minWidth: "220px"}}>{props.label + ":"}</IonLabel>
             <IonItem style={{flexGrow: 1}} class={"ion-no-padding"}>
-                <IonToggle style={{flexShrink: 0}} mode="ios" checked={props.placeholderBool} onIonChange={props.onChangeBool}/>
+                <IonToggle style={{flexShrink: 0}} mode="ios" checked={props.default} onIonChange={props.onChangeBool}/>
                 <IonInput min={props.min} max={props.max} className="ion-text-wrap"
                           style={{paddingLeft: "20px", maxWidth: "100px", minWidth: "100px"}}
                           placeholder={props.placeholderNum} type={"number"} onIonChange={props.onChangeNum}/>
