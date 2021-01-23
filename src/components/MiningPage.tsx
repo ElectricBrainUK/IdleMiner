@@ -51,7 +51,6 @@ const platforms = getPlatforms();
 const webBrowser = !platforms.includes("electron");
 
 if (webBrowser) {
-    console.log(process.env);
     // @ts-ignore
     Storage = {
         get(options: { key: string }): Promise<{ value: string | null }> {

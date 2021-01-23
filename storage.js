@@ -41,8 +41,6 @@ app.post('/:key/:apiKey', jsonParser, (req, res) => {
     }
     let data = JSON.parse(fs.readFileSync("config/data.json").toString());
     data[req.params.key] = req.body.value;
-    console.log(data);
-    console.log(req.body);
     fs.writeFileSync("config/data.json", JSON.stringify(data));
     res.send();
 });
