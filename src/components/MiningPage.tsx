@@ -1014,7 +1014,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 }
                                 {
                                     webBrowser && !mqtt ?
-                                        <p>If you haven't already, download the mining software to control your rigs <a href={"https://github.com/ElectricBrainUK/IdleMiner"} target={"_blank"}>here</a></p>
+                                        <p>If you haven't already, download the mining software to control your rigs <a rel="noopener noreferrer" href={"https://github.com/ElectricBrainUK/IdleMiner"} target={"_blank"}>here</a></p>
                                         :
                                         <></>
                                 }
