@@ -582,7 +582,6 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }));
 
         mqttDetails.push(Storage.get({key: "mqttUsername"}).then(res => {
-            console.log(res);
             if (res.value !== null) {
                 let value = JSON.parse(res.value);
                 setMQTTUsernamei(value);
