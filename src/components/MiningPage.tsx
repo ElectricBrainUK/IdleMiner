@@ -20,7 +20,7 @@ import EBSettingsSupportUs from "./EB-Settings-Support-Us";
 import EBHeader from "./EB-Header";
 import EBSettingsInfo from "./EB-Settings-Info";
 
-const {Storage} = Plugins;
+let {Storage} = Plugins;
 
 let child: any;
 let electron: any;
@@ -49,6 +49,49 @@ let manuallTriggeredMining = false;
 let mineIdle: boolean;
 const platforms = getPlatforms();
 const webBrowser = platforms.includes("desktop") && !platforms.includes("electron");
+
+if (webBrowser) {
+    // @ts-ignore
+    Storage = {
+        get(options: { key: string }): Promise<{ value: string | null }> {
+            return new Promise<{ value: string | null }>(resolve => {
+                return fetch("http://localhost:12345/" + options.key).then(response => {
+                    if (response.ok) {
+                        response.text().then(text => {
+                            if (text === "") {
+                                resolve({value: null});
+                            } else {
+                                resolve({value: text});
+                            }
+                        }).catch(err => {
+                            resolve({value: null});
+                        });
+                    } else {
+                        resolve({value: null});
+                    }
+                }).catch(err => {
+                    resolve({value: null});
+                });
+            });
+        },
+        set(options: { key: string; value: string }): Promise<void> {
+            return new Promise<void>(resolve => {
+                return fetch("http://localhost:12345/" + options.key, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+
+                    },
+                    body: JSON.stringify({value: options.value})
+                }).then(() => {
+                    resolve();
+                }).catch(() => {
+                    resolve();
+                });
+            });
+        }
+    }
+}
 
 let os: any;
 let mqttModule: any;
@@ -539,6 +582,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }));
 
         mqttDetails.push(Storage.get({key: "mqttUsername"}).then(res => {
+            console.log(res);
             if (res.value !== null) {
                 let value = JSON.parse(res.value);
                 setMQTTUsernamei(value);
