@@ -48,7 +48,7 @@ let hostName = "";
 let manuallTriggeredMining = false;
 let mineIdle: boolean;
 const platforms = getPlatforms();
-const webBrowser = platforms.includes("desktop") && !platforms.includes("electron");
+const webBrowser = !platforms.includes("electron");
 
 if (webBrowser) {
     // @ts-ignore
