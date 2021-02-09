@@ -1,11 +1,13 @@
-import {app, ipcMain, ipcRenderer} from "electron";
+import {app, ipcMain, ipcRenderer, Menu, Tray, nativeImage} from "electron";
 import {createCapacitorElectronApp} from "@capacitor-community/electron";
 
 const AutoLaunch = require('auto-launch');
+const path = require('path');
 
 let autoLaunch: any;
 // The MainWindow object can be accessed via myCapacitorApp.getMainWindow()
 const myCapacitorApp = createCapacitorElectronApp({mainWindow: {windowOptions: {frame: false}}});
+let tray = null;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some Electron APIs can only be used after this event occurs.
@@ -17,20 +19,58 @@ app.on("ready", () => {
         path: process.env.PORTABLE_EXECUTABLE_FILE,
     });
 
+    let mainWindow = myCapacitorApp.getMainWindow();
+    if (mainWindow !== null) {
+        mainWindow.on('restore', () => {
+            mainWindow.setSkipTaskbar(false)
+        })
+
+        mainWindow.on('minimize', () => {
+            mainWindow.setSkipTaskbar(true)
+        })
+    }
+    buildTray();
+    autoLaunch.isEnabled().then((isEnabled) => {
+        if (isEnabled) {
+            mainWindow.hide();
+        } else {
+            mainWindow.show();
+        }
+    });
+
     setTimeout(check, 500);
 });
 
 const check = () => {
     let mainWindow = myCapacitorApp.getMainWindow();
-    if (mainWindow !== null) {
-        mainWindow.setMenuBarVisibility(false);
-        mainWindow.webContents.on("devtools-opened", () => {
-            myCapacitorApp.getMainWindow().webContents.closeDevTools();
-        });
-    } else {
-        setTimeout(check, 500);
-    }
+    // if (mainWindow !== null) {
+    //     mainWindow.setMenuBarVisibility(false);
+    //     mainWindow.webContents.on("devtools-opened", () => {
+    //         myCapacitorApp.getMainWindow().webContents.closeDevTools();
+    //     });
+    // } else {
+    //     setTimeout(check, 500);
+    // }
 };
+
+const buildTray = () =>{
+    const iconPath = path.join(__dirname, 'build/trayIcon.ico');
+    console.log(iconPath);
+    tray = new Tray(nativeImage.createFromPath(iconPath));
+    const trayMenu = Menu.buildFromTemplate([
+        {
+            label: 'Show',
+            click: () => {
+                myCapacitorApp.getMainWindow().restore()
+            }
+        },
+        {
+            label: 'Quit',
+            role: 'quit'
+        }
+    ])
+    tray.setContextMenu(trayMenu);
+}
 
 // Quit when all windows are closed.
 app.on("window-all-closed", function () {

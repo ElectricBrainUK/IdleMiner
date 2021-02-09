@@ -468,8 +468,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [onPage, setOnPage] = useState(0);
     const [viewFullLog, setViewFullLog] = useState(false);
 
-    const enabledCss = "container";
-    const disabledCss = "container invisible";
+    const enabledCss = "eb-container";
+    const disabledCss = "eb-container invisible";
 
     log = logs;
     setLog = setLogs;
