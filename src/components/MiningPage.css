@@ -5,13 +5,18 @@
   padding-top: 20px;
 }
 
-.eb-container {
+.container {
   position: absolute;
   opacity: 1;
   transition-duration: 1s;
   text-align: center;
   width: 100%;
   pointer-events: auto;
+}
+
+.forceTop {
+  top: 0;
+  position: absolute;
 }
 
 .invisible {

@@ -8,6 +8,7 @@ let autoLaunch: any;
 // The MainWindow object can be accessed via myCapacitorApp.getMainWindow()
 const myCapacitorApp = createCapacitorElectronApp({mainWindow: {windowOptions: {frame: false}}});
 let tray = null;
+let startMinimised: boolean;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some Electron APIs can only be used after this event occurs.
@@ -16,7 +17,7 @@ app.on("ready", () => {
 
     autoLaunch = new AutoLaunch({
         name: 'Idle Miner',
-        path: process.env.PORTABLE_EXECUTABLE_FILE,
+        path: process.env.PORTABLE_EXECUTABLE_FILE
     });
 
     let mainWindow = myCapacitorApp.getMainWindow();
@@ -30,46 +31,45 @@ app.on("ready", () => {
         })
     }
     buildTray();
-    autoLaunch.isEnabled().then((isEnabled) => {
-        if (isEnabled) {
-            mainWindow.hide();
-        } else {
-            mainWindow.show();
-        }
-    });
 
     setTimeout(check, 500);
 });
 
 const check = () => {
     let mainWindow = myCapacitorApp.getMainWindow();
-    // if (mainWindow !== null) {
-    //     mainWindow.setMenuBarVisibility(false);
-    //     mainWindow.webContents.on("devtools-opened", () => {
-    //         myCapacitorApp.getMainWindow().webContents.closeDevTools();
-    //     });
-    // } else {
-    //     setTimeout(check, 500);
-    // }
+    if (mainWindow !== null) {
+        mainWindow.setMenuBarVisibility(false);
+        mainWindow.webContents.on("devtools-opened", () => {
+            myCapacitorApp.getMainWindow().webContents.closeDevTools();
+        });
+    } else {
+        setTimeout(check, 500);
+    }
 };
 
-const buildTray = () =>{
-    const iconPath = path.join(__dirname, 'build/trayIcon.ico');
-    console.log(iconPath);
+const buildTray = () => {
+    const iconPath = path.join(__dirname, 'trayIcon.ico');
     tray = new Tray(nativeImage.createFromPath(iconPath));
     const trayMenu = Menu.buildFromTemplate([
         {
-            label: 'Show',
+            label: "Show",
             click: () => {
                 myCapacitorApp.getMainWindow().restore()
             }
         },
         {
-            label: 'Quit',
+            label: "Quit",
             role: 'quit'
         }
     ])
     tray.setContextMenu(trayMenu);
+    tray.setIgnoreDoubleClickEvents(true);
+    tray.on("click", function () {
+        if (myCapacitorApp.getMainWindow().isMinimized()) {
+            myCapacitorApp.getMainWindow().restore();
+        }
+    })
+
 }
 
 // Quit when all windows are closed.
@@ -118,6 +118,9 @@ ipcMain.on("isAutoLaunch", (event, args) => {
             event.sender.send("autoLaunchDisabled");
         }
     });
+});
+ipcMain.on("startMinimisedEnabled", (event, args) => {
+    myCapacitorApp.getMainWindow().minimize()
 });
 
 ipcMain.on("closeApp", (event, args) => {

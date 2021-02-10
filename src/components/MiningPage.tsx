@@ -464,12 +464,13 @@ const MiningPage: React.FC<ContainerProps> = () => {
     const [mqttBaseTopic, setMQTTBaseTopici] = useState("");
     const [mqttOtherHosts, setOtherHosts] = useState({});
     const [autoStart, setAutoStart] = useState(false);
+    const [startMinimised, setStartMinimised] = useState(false);
     const [mineIdleI, setMineIdleI] = useState(true);
     const [onPage, setOnPage] = useState(0);
     const [viewFullLog, setViewFullLog] = useState(false);
 
-    const enabledCss = "eb-container";
-    const disabledCss = "eb-container invisible";
+    const enabledCss = "";
+    const disabledCss = "invisible";
 
     log = logs;
     setLog = setLogs;
@@ -560,6 +561,16 @@ const MiningPage: React.FC<ContainerProps> = () => {
             if (res.value !== null) {
                 mineIdle = JSON.parse(res.value);
                 setMineIdleI(JSON.parse(res.value));
+            }
+        });
+
+        Storage.get({key: "startMinimised"}).then(res => {
+            if (res.value !== null) {
+                let value : boolean = JSON.parse(res.value);
+                setStartMinimised(value);
+                if(electron && value) {
+                    electron.ipcRenderer.send("startMinimisedEnabled");
+                }
             }
         });
 
@@ -873,6 +884,14 @@ const MiningPage: React.FC<ContainerProps> = () => {
         }
     };
 
+    const setStartMinimisedOnLaunch = (e: any) => {
+       setStartMinimised(e.detail.checked);
+       Storage.set({
+           key: "startMinimised",
+           value : JSON.stringify(e.detail.checked)
+       })
+    };
+
     const setNewAddress = () => {
         if (newDonationAddress !== "" && newDonationName !== "" && newDonationAddress.substring(0, 2) === "0x" && newDonationAddress.length === donationAddress.default.length) {
             addDonationAddress(newDonationName, newDonationAddress);
@@ -964,7 +983,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                       minimise={minimiseApp} exit={exitApp} webBrowser={webBrowser}/>
             <IonContent>
                 <div className={"centre"}>
-                    <div className={onPage !== 0 ? enabledCss : disabledCss}>
+                    <div className={"container " +(onPage !== 0 ? enabledCss : disabledCss)}>
                         <IonCard className={webBrowser ? disabledCss : enabledCss}>
                             <IonCardTitle>
                                 Mining
@@ -990,6 +1009,8 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                                     onChange={setIdleMinutes} unit={"minutes"} min={"0"}/>
                                 <EBSettingsBooleanInput label={"Start On Boot"} default={autoStart}
                                                         onChange={setStartOnBoot}/>
+                                <EBSettingsBooleanInput label={"Start Minimised"} default={startMinimised}
+                                                        onChange={setStartMinimisedOnLaunch}/>
                             </IonCardContent>
                         </IonCard>
                         <IonCard className={webBrowser ? disabledCss : enabledCss}>
@@ -1000,7 +1021,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                                 {donations}
                             </IonCardContent>
                         </IonCard>
-                        <IonCard>
+                        <IonCard className={webBrowser ? "forceTop" : ""}>
                             <IonCardTitle>
                                 MQTT
                                 <div style={{display: "inline-block", width: "700px", flexShrink: 1}}/>
@@ -1039,7 +1060,7 @@ const MiningPage: React.FC<ContainerProps> = () => {
                             </IonCardContent>
                         </IonCard>
                     </div>
-                    <div className={onPage === 0 ? enabledCss : disabledCss}>
+                    <div className={"container " + (onPage === 0 ? enabledCss : disabledCss)}>
                         {!viewFullLog ?
                             <>
                                 {!mining ?
